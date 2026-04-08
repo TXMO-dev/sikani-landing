@@ -684,4 +684,394 @@ function initAnimations() {
       },
     });
   }
+
+  // ── Registration Form GSAP Animations ──────────────────────────────
+  const regCard = document.querySelector('.reg-card');
+  if (regCard) {
+    gsap.from('.reg-card', {
+      scrollTrigger: {
+        trigger: '.register',
+        start: 'top 70%',
+      },
+      y: 60,
+      opacity: 0,
+      duration: 0.8,
+      ease: 'power3.out',
+    });
+
+    gsap.from('.reg-field', {
+      scrollTrigger: {
+        trigger: '.reg-card',
+        start: 'top 75%',
+      },
+      y: 20,
+      opacity: 0,
+      stagger: 0.06,
+      duration: 0.5,
+      delay: 0.3,
+      ease: 'power3.out',
+    });
+
+    gsap.from('.reg-submit', {
+      scrollTrigger: {
+        trigger: '.reg-card',
+        start: 'top 60%',
+      },
+      y: 20,
+      opacity: 0,
+      duration: 0.5,
+      delay: 0.8,
+      ease: 'power3.out',
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SELLER REGISTRATION — API + Validation + Form Handler
+// ═══════════════════════════════════════════════════════════════════════════
+
+const GRAPHQL_URL = window.location.hostname === 'localhost'
+  ? 'http://192.168.1.148:5102/graphql'
+  : 'https://api.sikani.tech/graphql';
+
+// ── GraphQL registration call ────────────────────────────────────────────
+async function registerSeller(data) {
+  const response = await fetch(GRAPHQL_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      query: `mutation RegisterSeller($input: SellerRegistrationInput!) {
+        registerSeller(input: $input) {
+          success message
+          data { id email firstName lastName }
+        }
+      }`,
+      variables: {
+        input: {
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email: data.email,
+          phoneNumber: data.phoneNumber,
+          password: data.password,
+          confirmPassword: data.confirmPassword,
+          businessName: data.businessName || null,
+        }
+      }
+    })
+  });
+
+  if (!response.ok) throw new Error('Server error');
+  const json = await response.json();
+  if (json.errors?.length) throw new Error(json.errors[0].message);
+  if (!json.data?.registerSeller?.success) throw new Error(json.data?.registerSeller?.message || 'Registration failed');
+  return json.data.registerSeller;
+}
+
+// ── Fallback email ───────────────────────────────────────────────────────
+function fallbackEmail(data) {
+  const subject = encodeURIComponent('New Seller Registration (API Down)');
+  const body = encodeURIComponent(
+    `New seller registration request:\n\n` +
+    `Name: ${data.firstName} ${data.lastName}\n` +
+    `Email: ${data.email}\n` +
+    `Phone: ${data.phoneNumber}\n` +
+    `Business: ${data.businessName || 'N/A'}\n\n` +
+    `Note: This was submitted because the API was unavailable. Please create the account manually.`
+  );
+  window.location.href = `mailto:info@sikani.tech?subject=${subject}&body=${body}`;
+}
+
+// ── Validation helpers ───────────────────────────────────────────────────
+const validators = {
+  firstName: (v) => v.trim() ? '' : 'First name is required',
+  lastName: (v) => v.trim() ? '' : 'Last name is required',
+  email: (v) => {
+    if (!v.trim()) return 'Email is required';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return 'Enter a valid email address';
+    return '';
+  },
+  phone: (v) => {
+    if (!v.trim()) return 'Phone number is required';
+    const cleaned = v.replace(/[\s\-()]/g, '');
+    if (!/^0[2-5][0-9]{8}$/.test(cleaned)) return 'Enter a valid Ghana phone number (e.g. 024XXXXXXX)';
+    return '';
+  },
+  password: (v) => {
+    if (!v) return 'Password is required';
+    if (v.length < 8) return 'Password must be at least 8 characters';
+    if (!/[A-Z]/.test(v)) return 'Password must include at least 1 uppercase letter';
+    if (!/[0-9]/.test(v)) return 'Password must include at least 1 number';
+    return '';
+  },
+  confirmPassword: (v, pw) => {
+    if (!v) return 'Please confirm your password';
+    if (v !== pw) return 'Passwords do not match';
+    return '';
+  },
+  terms: (checked) => checked ? '' : 'You must agree to the terms',
+};
+
+function showFieldError(fieldId, errorId, msg) {
+  const input = document.getElementById(fieldId);
+  const errEl = document.getElementById(errorId);
+  if (errEl) errEl.textContent = msg;
+  if (input) {
+    input.classList.toggle('invalid', !!msg);
+    input.classList.toggle('valid', !msg && input.value.trim().length > 0);
+  }
+}
+
+// ── Debounced real-time validation ───────────────────────────────────────
+let debounceTimers = {};
+function debounceValidate(fieldId, errorId, validatorFn, delay = 400) {
+  const input = document.getElementById(fieldId);
+  if (!input) return;
+  input.addEventListener('input', () => {
+    clearTimeout(debounceTimers[fieldId]);
+    debounceTimers[fieldId] = setTimeout(() => {
+      const pw = fieldId === 'regConfirmPassword' ? document.getElementById('regPassword').value : undefined;
+      const msg = validatorFn(input.value, pw);
+      showFieldError(fieldId, errorId, msg);
+    }, delay);
+  });
+}
+
+// ── Password show/hide toggle ────────────────────────────────────────────
+document.querySelectorAll('.pw-toggle').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const targetId = btn.getAttribute('data-target');
+    const input = document.getElementById(targetId);
+    if (!input) return;
+    const isPassword = input.type === 'password';
+    input.type = isPassword ? 'text' : 'password';
+    const openEye = btn.querySelector('.eye-open');
+    const closedEye = btn.querySelector('.eye-closed');
+    if (openEye) openEye.style.display = isPassword ? 'none' : '';
+    if (closedEye) closedEye.style.display = isPassword ? '' : 'none';
+  });
+});
+
+// ── Wire up debounced validation ─────────────────────────────────────────
+debounceValidate('regFirstName', 'errFirstName', validators.firstName);
+debounceValidate('regLastName', 'errLastName', validators.lastName);
+debounceValidate('regEmail', 'errEmail', validators.email);
+debounceValidate('regPhone', 'errPhone', validators.phone);
+debounceValidate('regPassword', 'errPassword', validators.password);
+debounceValidate('regConfirmPassword', 'errConfirmPassword', validators.confirmPassword);
+
+// ── Mascot animation ────────────────────────────────────────────────────
+const mascotWrap = document.getElementById('mascot');
+const pupilL = document.querySelector('.mascot-pupil-l');
+const pupilR = document.querySelector('.mascot-pupil-r');
+const handL = document.querySelector('.mascot-hand-l ellipse');
+const handR = document.querySelector('.mascot-hand-r ellipse');
+const eyeL = document.querySelector('.mascot-eye-l');
+const eyeR = document.querySelector('.mascot-eye-r');
+
+if (mascotWrap) {
+  // Track eye movement based on which input is focused
+  const emailInput = document.getElementById('regEmail');
+  const phoneInput = document.getElementById('regPhone');
+  const firstNameInput = document.getElementById('regFirstName');
+  const lastNameInput = document.getElementById('regLastName');
+  const businessInput = document.getElementById('regBusiness');
+  const passwordInput = document.getElementById('regPassword');
+  const confirmInput = document.getElementById('regConfirmPassword');
+
+  const textInputs = [emailInput, phoneInput, firstNameInput, lastNameInput, businessInput].filter(Boolean);
+  const passwordInputs = [passwordInput, confirmInput].filter(Boolean);
+
+  // Eyes follow text input caret position
+  function trackEyes(inputEl) {
+    if (!inputEl || !pupilL || !pupilR) return;
+    const val = inputEl.value || '';
+    // Map text length to pupil position (-5 to 5 horizontal)
+    const progress = Math.min(val.length / 30, 1);
+    const offsetX = (progress - 0.5) * 10;
+    gsap.to(pupilL, { attr: { cx: 80 + offsetX }, duration: 0.15 });
+    gsap.to(pupilR, { attr: { cx: 120 + offsetX }, duration: 0.15 });
+    // Eyes slightly down when typing
+    gsap.to(pupilL, { attr: { cy: 78 }, duration: 0.15 });
+    gsap.to(pupilR, { attr: { cy: 78 }, duration: 0.15 });
+  }
+
+  // Reset eyes to center
+  function resetEyes() {
+    gsap.to(pupilL, { attr: { cx: 80, cy: 76 }, duration: 0.3 });
+    gsap.to(pupilR, { attr: { cx: 120, cy: 76 }, duration: 0.3 });
+    // Open eyes
+    gsap.to(eyeL, { attr: { ry: 16 }, duration: 0.3 });
+    gsap.to(eyeR, { attr: { ry: 16 }, duration: 0.3 });
+  }
+
+  // Password mode: cover eyes with hands
+  function enterPasswordMode() {
+    mascotWrap.classList.add('password-mode');
+    // Animate hands to cover eyes
+    gsap.to(handL, { attr: { cx: 78, cy: 75 }, opacity: 1, duration: 0.4, ease: 'back.out(1.5)' });
+    gsap.to(handR, { attr: { cx: 122, cy: 75 }, opacity: 1, duration: 0.4, ease: 'back.out(1.5)' });
+    // Squint eyes
+    gsap.to(eyeL, { attr: { ry: 3 }, duration: 0.3 });
+    gsap.to(eyeR, { attr: { ry: 3 }, duration: 0.3 });
+  }
+
+  function exitPasswordMode() {
+    mascotWrap.classList.remove('password-mode');
+    // Move hands away
+    gsap.to(handL, { attr: { cx: 42, cy: 68 }, opacity: 0, duration: 0.4, ease: 'power2.in' });
+    gsap.to(handR, { attr: { cx: 158, cy: 68 }, opacity: 0, duration: 0.4, ease: 'power2.in' });
+    resetEyes();
+  }
+
+  // Text inputs — eyes follow
+  textInputs.forEach(input => {
+    input.addEventListener('focus', () => {
+      exitPasswordMode();
+      trackEyes(input);
+    });
+    input.addEventListener('input', () => trackEyes(input));
+    input.addEventListener('blur', resetEyes);
+  });
+
+  // Password inputs — cover eyes
+  passwordInputs.forEach(input => {
+    input.addEventListener('focus', enterPasswordMode);
+    input.addEventListener('blur', () => {
+      exitPasswordMode();
+      resetEyes();
+    });
+  });
+
+  // Password show/hide toggle — peek through fingers
+  document.querySelectorAll('.pw-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const isPeeking = btn.closest('.reg-field').querySelector('input').type === 'text';
+      if (isPeeking) {
+        // Covering eyes again
+        gsap.to(eyeL, { attr: { ry: 3 }, duration: 0.2 });
+        gsap.to(eyeR, { attr: { ry: 3 }, duration: 0.2 });
+      } else {
+        // Peeking — open eyes slightly, hands spread apart a bit
+        gsap.to(eyeL, { attr: { ry: 8 }, duration: 0.3 });
+        gsap.to(eyeR, { attr: { ry: 8 }, duration: 0.3 });
+        gsap.to(handL, { attr: { cx: 70 }, duration: 0.3 });
+        gsap.to(handR, { attr: { cx: 130 }, duration: 0.3 });
+      }
+    });
+  });
+}
+
+// ── Form submit handler ──────────────────────────────────────────────────
+const sellerRegForm = document.getElementById('sellerRegForm');
+if (sellerRegForm) {
+  let lastFormData = null;
+
+  sellerRegForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const data = {
+      firstName: document.getElementById('regFirstName').value,
+      lastName: document.getElementById('regLastName').value,
+      email: document.getElementById('regEmail').value,
+      phoneNumber: document.getElementById('regPhone').value,
+      businessName: document.getElementById('regBusiness').value,
+      password: document.getElementById('regPassword').value,
+      confirmPassword: document.getElementById('regConfirmPassword').value,
+      terms: document.getElementById('regTerms').checked,
+    };
+
+    // Run all validations
+    const errors = {
+      firstName: validators.firstName(data.firstName),
+      lastName: validators.lastName(data.lastName),
+      email: validators.email(data.email),
+      phone: validators.phone(data.phoneNumber),
+      password: validators.password(data.password),
+      confirmPassword: validators.confirmPassword(data.confirmPassword, data.password),
+      terms: validators.terms(data.terms),
+    };
+
+    showFieldError('regFirstName', 'errFirstName', errors.firstName);
+    showFieldError('regLastName', 'errLastName', errors.lastName);
+    showFieldError('regEmail', 'errEmail', errors.email);
+    showFieldError('regPhone', 'errPhone', errors.phone);
+    showFieldError('regPassword', 'errPassword', errors.password);
+    showFieldError('regConfirmPassword', 'errConfirmPassword', errors.confirmPassword);
+    const termsErr = document.getElementById('errTerms');
+    if (termsErr) termsErr.textContent = errors.terms;
+
+    const hasErrors = Object.values(errors).some((msg) => msg);
+    if (hasErrors) {
+      const regCard = document.querySelector('.reg-card');
+      if (regCard) {
+        regCard.classList.remove('shake');
+        void regCard.offsetWidth; // force reflow
+        regCard.classList.add('shake');
+      }
+      return;
+    }
+
+    lastFormData = data;
+
+    // Show loading
+    const submitBtn = document.getElementById('regSubmitBtn');
+    const btnText = submitBtn.querySelector('.btn-text');
+    const btnSpinner = submitBtn.querySelector('.btn-spinner');
+    submitBtn.disabled = true;
+    btnText.textContent = 'Creating account...';
+    btnSpinner.style.display = '';
+
+    const fallbackEl = document.getElementById('regFallback');
+    fallbackEl.style.display = 'none';
+
+    try {
+      await registerSeller(data);
+      // Success — show modal
+      const modal = document.getElementById('regSuccessModal');
+      modal.style.display = 'flex';
+      gsap.from('.reg-modal-content', { scale: 0.9, opacity: 0, duration: 0.4, ease: 'back.out(1.7)' });
+      sellerRegForm.reset();
+      // Reset field styles
+      sellerRegForm.querySelectorAll('input').forEach((inp) => {
+        inp.classList.remove('valid', 'invalid');
+      });
+      sellerRegForm.querySelectorAll('.field-error').forEach((el) => {
+        el.textContent = '';
+      });
+    } catch (err) {
+      // Show error + fallback
+      fallbackEl.style.display = '';
+      const regCard = document.querySelector('.reg-card');
+      if (regCard) {
+        regCard.classList.remove('shake');
+        void regCard.offsetWidth;
+        regCard.classList.add('shake');
+      }
+    } finally {
+      submitBtn.disabled = false;
+      btnText.textContent = 'Create Seller Account';
+      btnSpinner.style.display = 'none';
+    }
+  });
+
+  // Fallback email button
+  const fallbackBtn = document.getElementById('fallbackEmailBtn');
+  if (fallbackBtn) {
+    fallbackBtn.addEventListener('click', () => {
+      if (lastFormData) fallbackEmail(lastFormData);
+    });
+  }
+
+  // Close success modal
+  const modalClose = document.getElementById('regModalClose');
+  const modalOverlay = document.querySelector('.reg-modal-overlay');
+  function closeModal() {
+    const modal = document.getElementById('regSuccessModal');
+    gsap.to('.reg-modal-content', {
+      scale: 0.9, opacity: 0, duration: 0.3, ease: 'power2.in',
+      onComplete: () => { modal.style.display = 'none'; }
+    });
+  }
+  if (modalClose) modalClose.addEventListener('click', closeModal);
+  if (modalOverlay) modalOverlay.addEventListener('click', closeModal);
 }

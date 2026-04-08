@@ -496,6 +496,170 @@
     </div>
   </section>
 
+  <!-- Seller Registration Section -->
+  <section id="register" class="section register">
+    <div class="container">
+      <div class="section-header" data-reveal>
+        <span class="section-tag">Become a Seller</span>
+        <h2 class="section-title" data-split>Start selling<br>with Sikani</h2>
+        <p class="section-desc">Register your business in 2 minutes. No hardware needed.</p>
+      </div>
+      <div class="reg-card" data-reveal>
+        <!-- Animated mascot — watches email typing, covers eyes for password -->
+        <div class="mascot-wrap" id="mascot">
+          <svg viewBox="0 0 200 180" class="mascot-svg">
+            <!-- Body -->
+            <ellipse cx="100" cy="140" rx="55" ry="35" fill="#1a1a1a" stroke="#D4AF37" stroke-width="2"/>
+            <!-- Head -->
+            <circle cx="100" cy="80" r="50" fill="#1a1a1a" stroke="#D4AF37" stroke-width="2"/>
+            <!-- Left ear -->
+            <path d="M60 45 L45 15 L70 35Z" fill="#1a1a1a" stroke="#D4AF37" stroke-width="2"/>
+            <path d="M63 42 L52 22 L68 37Z" fill="#D4AF37" opacity="0.15"/>
+            <!-- Right ear -->
+            <path d="M140 45 L155 15 L130 35Z" fill="#1a1a1a" stroke="#D4AF37" stroke-width="2"/>
+            <path d="M137 42 L148 22 L132 37Z" fill="#D4AF37" opacity="0.15"/>
+            <!-- Left eye white -->
+            <ellipse class="mascot-eye-l" cx="80" cy="75" rx="15" ry="16" fill="#222"/>
+            <!-- Right eye white -->
+            <ellipse class="mascot-eye-r" cx="120" cy="75" rx="15" ry="16" fill="#222"/>
+            <!-- Left pupil (moves with input) -->
+            <circle class="mascot-pupil-l" cx="80" cy="76" r="7" fill="#D4AF37"/>
+            <circle cx="77" cy="73" r="2.5" fill="#fff" opacity="0.8"/>
+            <!-- Right pupil (moves with input) -->
+            <circle class="mascot-pupil-r" cx="120" cy="76" r="7" fill="#D4AF37"/>
+            <circle cx="117" cy="73" r="2.5" fill="#fff" opacity="0.8"/>
+            <!-- Nose -->
+            <ellipse cx="100" cy="92" rx="5" ry="3" fill="#D4AF37" opacity="0.5"/>
+            <!-- Mouth -->
+            <path class="mascot-mouth" d="M90 100 Q100 108 110 100" fill="none" stroke="#D4AF37" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+            <!-- Left hand (covers left eye on password) -->
+            <g class="mascot-hand-l" style="transform-origin: 55px 110px;">
+              <ellipse cx="42" cy="68" rx="18" ry="14" fill="#1a1a1a" stroke="#D4AF37" stroke-width="1.5" opacity="0"/>
+            </g>
+            <!-- Right hand (covers right eye on password) -->
+            <g class="mascot-hand-r" style="transform-origin: 145px 110px;">
+              <ellipse cx="158" cy="68" rx="18" ry="14" fill="#1a1a1a" stroke="#D4AF37" stroke-width="1.5" opacity="0"/>
+            </g>
+            <!-- Blush -->
+            <circle cx="65" cy="90" r="8" fill="#D4AF37" opacity="0.06"/>
+            <circle cx="135" cy="90" r="8" fill="#D4AF37" opacity="0.06"/>
+          </svg>
+        </div>
+        <form id="sellerRegForm" class="reg-form" novalidate>
+          <div class="reg-row">
+            <div class="reg-field">
+              <label for="regFirstName">First Name <span class="req">*</span></label>
+              <input type="text" id="regFirstName" name="firstName" required autocomplete="given-name" placeholder="Kwame">
+              <span class="field-error" id="errFirstName"></span>
+            </div>
+            <div class="reg-field">
+              <label for="regLastName">Last Name <span class="req">*</span></label>
+              <input type="text" id="regLastName" name="lastName" required autocomplete="family-name" placeholder="Asante">
+              <span class="field-error" id="errLastName"></span>
+            </div>
+          </div>
+          <div class="reg-row">
+            <div class="reg-field">
+              <label for="regEmail">Email <span class="req">*</span></label>
+              <input type="email" id="regEmail" name="email" required autocomplete="email" placeholder="kwame@example.com">
+              <span class="field-error" id="errEmail"></span>
+            </div>
+            <div class="reg-field">
+              <label for="regPhone">Phone Number <span class="req">*</span></label>
+              <input type="tel" id="regPhone" name="phoneNumber" required autocomplete="tel" placeholder="024XXXXXXX">
+              <span class="field-error" id="errPhone"></span>
+            </div>
+          </div>
+          <div class="reg-field">
+            <label for="regBusiness">Business Name <span class="opt">(optional)</span></label>
+            <input type="text" id="regBusiness" name="businessName" autocomplete="organization" placeholder="Asante Provisions">
+          </div>
+          <div class="reg-row">
+            <div class="reg-field">
+              <label for="regPassword">Password <span class="req">*</span></label>
+              <div class="password-wrap">
+                <input type="password" id="regPassword" name="password" required autocomplete="new-password" placeholder="Min 8 characters">
+                <button type="button" class="pw-toggle" data-target="regPassword" aria-label="Toggle password visibility">
+                  <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <svg class="eye-closed" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                </button>
+              </div>
+              <span class="field-error" id="errPassword"></span>
+            </div>
+            <div class="reg-field">
+              <label for="regConfirmPassword">Confirm Password <span class="req">*</span></label>
+              <div class="password-wrap">
+                <input type="password" id="regConfirmPassword" name="confirmPassword" required autocomplete="new-password" placeholder="Re-enter password">
+                <button type="button" class="pw-toggle" data-target="regConfirmPassword" aria-label="Toggle password visibility">
+                  <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <svg class="eye-closed" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                </button>
+              </div>
+              <span class="field-error" id="errConfirmPassword"></span>
+            </div>
+          </div>
+          <div class="reg-field reg-terms">
+            <label class="checkbox-label">
+              <input type="checkbox" id="regTerms" name="terms" required>
+              <span class="checkbox-custom"></span>
+              <span>I agree to the <a href="#" class="text-link">Terms of Service</a> and <a href="#" class="text-link">Privacy Policy</a></span>
+            </label>
+            <span class="field-error" id="errTerms"></span>
+          </div>
+          <button type="submit" class="btn btn-primary reg-submit" id="regSubmitBtn">
+            <span class="btn-text">Create Seller Account</span>
+            <div class="btn-spinner" style="display:none">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+            </div>
+            <div class="btn-shine"></div>
+          </button>
+          <div class="reg-fallback" id="regFallback" style="display:none">
+            <p>We're experiencing issues. Would you like to email us instead?</p>
+            <button type="button" class="btn btn-outline" id="fallbackEmailBtn">
+              <span>Send via Email</span>
+            </button>
+          </div>
+        </form>
+        <p class="reg-footer">Already have an account? <a href="#download" class="text-link">Download the app to sign in</a></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Success Modal -->
+  <div id="regSuccessModal" class="reg-modal" style="display:none">
+    <div class="reg-modal-overlay"></div>
+    <div class="reg-modal-content">
+      <div class="reg-modal-check">
+        <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+          <circle cx="32" cy="32" r="30" stroke="#D4AF37" stroke-width="2" opacity="0.3"/>
+          <circle class="check-circle" cx="32" cy="32" r="30" stroke="#D4AF37" stroke-width="2"/>
+          <path class="check-mark" d="M20 33l8 8 16-16" stroke="#D4AF37" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h3>Welcome to Sikani!</h3>
+      <p>Your seller account has been created. Check your email for confirmation.</p>
+      <div class="download-buttons" style="margin-top:24px">
+        <a href="#" class="store-btn" data-magnetic>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+          <div>
+            <span class="store-label">Download on the</span>
+            <span class="store-name">App Store</span>
+          </div>
+        </a>
+        <a href="#" class="store-btn" data-magnetic>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M3.609 1.814L13.792 12 3.61 22.186a.996.996 0 01-.61-.92V2.734a1 1 0 01.609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-3.198l2.807 1.626a1 1 0 010 1.73l-2.808 1.626L15.206 12l2.492-2.491zM5.864 2.658L16.8 8.99l-2.3 2.3-8.636-8.632z"/></svg>
+          <div>
+            <span class="store-label">Get it on</span>
+            <span class="store-name">Google Play</span>
+          </div>
+        </a>
+      </div>
+      <button type="button" class="btn btn-outline reg-modal-close" id="regModalClose">
+        <span>Close</span>
+      </button>
+    </div>
+  </div>
+
   <!-- Download Section -->
   <section id="download" class="section download">
     <div class="container">
@@ -520,7 +684,7 @@
           </a>
         </div>
         <div class="download-roles">
-          <p>Are you a merchant? <a href="#" class="text-link">Register as a Seller</a></p>
+          <p>Are you a merchant? <a href="#register" class="text-link">Register as a Seller</a></p>
         </div>
       </div>
     </div>
