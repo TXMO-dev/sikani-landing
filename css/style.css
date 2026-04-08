@@ -2153,7 +2153,7 @@ button { cursor: none; border: none; background: none; font: inherit; color: inh
 }
 
 /* ── Section Depth Layering (Parallax Separation) ─────────────────────────── */
-.section::before {
+.section::after {
   content: '';
   position: absolute;
   top: 0;
@@ -2162,7 +2162,7 @@ button { cursor: none; border: none; background: none; font: inherit; color: inh
   height: 120px;
   background: linear-gradient(to bottom, rgba(10,10,10,0.8), transparent);
   pointer-events: none;
-  z-index: 1;
+  z-index: 0;
   opacity: 0.5;
 }
 
@@ -2172,10 +2172,9 @@ button { cursor: none; border: none; background: none; font: inherit; color: inh
 }
 
 /* Layered card overlap effect */
-.section + .section {
+.about, .product, .features, .how-it-works, .security, .register, .download {
   margin-top: -40px;
   position: relative;
-  z-index: auto;
 }
 
 .hero + .section {
