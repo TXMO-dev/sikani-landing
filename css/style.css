@@ -221,7 +221,7 @@ button { cursor: none; border: none; background: none; font: inherit; color: inh
   width: 0;
   height: 1px;
   background: var(--gold);
-  transition: width 0.3s var(--ease);
+  transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .nav-link:hover { color: var(--text); }
@@ -1345,4 +1345,178 @@ button { cursor: none; border: none; background: none; font: inherit; color: inh
   .text-reveal-section { padding: 80px 20px; min-height: 60vh; }
   .horizontal-section { padding: 80px 0; }
   .phone-showcase { padding: 60px 20px; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PREMIUM SCROLL ANIMATIONS — Additional Styles
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Scroll Progress Indicator ─────────────────────────────────────────── */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, var(--gold-dark), var(--gold), var(--gold-light));
+  transform-origin: left;
+  transform: scaleX(0);
+  z-index: 10001;
+  pointer-events: none;
+}
+
+/* ── Gradient Mesh Background ──────────────────────────────────────────── */
+.gradient-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(212,175,55,0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(212,175,55,0.03) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(184,150,15,0.04) 0%, transparent 50%);
+  pointer-events: none;
+  will-change: background;
+}
+
+/* ── Hero Parallax Shapes ──────────────────────────────────────────────── */
+.hero-shapes {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.hero-shape {
+  position: absolute;
+  border-radius: 50%;
+  will-change: transform;
+}
+
+.hero-shape.shape-1 {
+  width: 300px;
+  height: 300px;
+  top: 10%;
+  left: 10%;
+  background: radial-gradient(circle, rgba(212,175,55,0.08) 0%, transparent 70%);
+  filter: blur(40px);
+}
+
+.hero-shape.shape-2 {
+  width: 200px;
+  height: 200px;
+  top: 60%;
+  right: 15%;
+  border: 1px solid rgba(212,175,55,0.06);
+  filter: blur(1px);
+}
+
+.hero-shape.shape-3 {
+  width: 150px;
+  height: 150px;
+  bottom: 20%;
+  left: 25%;
+  background: radial-gradient(circle, rgba(212,175,55,0.05) 0%, transparent 60%);
+  filter: blur(30px);
+}
+
+/* ── SplitType Character Animation Overrides ───────────────────────────── */
+.hero-title .char {
+  display: inline-block;
+  will-change: transform, opacity;
+}
+
+.hero-title .word {
+  display: inline-block;
+  overflow: hidden;
+}
+
+/* ── Section Clip-Path & Scale Transitions ─────────────────────────────── */
+.section {
+  will-change: clip-path;
+}
+
+.section > .container {
+  will-change: transform, opacity;
+}
+
+/* ── Floating Badges ───────────────────────────────────────────────────── */
+.floating-badges {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.floating-badge {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: rgba(17,17,17,0.85);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  backdrop-filter: blur(12px);
+  white-space: nowrap;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  will-change: transform;
+}
+
+.badge-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.floating-badge.badge-1 {
+  top: 15%;
+  left: 5%;
+}
+
+.floating-badge.badge-2 {
+  top: 20%;
+  right: 5%;
+}
+
+.floating-badge.badge-3 {
+  bottom: 25%;
+  left: 8%;
+}
+
+.floating-badge.badge-4 {
+  bottom: 18%;
+  right: 8%;
+}
+
+@keyframes badge-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* ── Feature Card Rotation on Enter ────────────────────────────────────── */
+.feature {
+  will-change: transform, opacity;
+  transform-style: preserve-3d;
+  perspective: 800px;
+}
+
+/* ── Footer Curtain Reveal ─────────────────────────────────────────────── */
+.footer {
+  position: relative;
+  will-change: transform;
+}
+
+/* ── Phone Showcase Relative for Badges ────────────────────────────────── */
+.phone-showcase-inner {
+  position: relative;
+}
+
+@media (max-width: 768px) {
+  .floating-badges { display: none; }
+  .hero-shapes { display: none; }
+  .scroll-progress { height: 2px; }
 }

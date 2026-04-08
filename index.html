@@ -34,6 +34,12 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+  <!-- Scroll progress indicator -->
+  <div class="scroll-progress"></div>
+
+  <!-- Gradient mesh background -->
+  <div class="gradient-bg"></div>
+
   <!-- Loading screen -->
   <div id="loader" class="loader">
     <div class="loader-inner">
@@ -93,6 +99,12 @@
   <section id="hero" class="hero">
     <div class="hero-bg">
       <canvas id="heroCanvas"></canvas>
+    </div>
+    <!-- Parallax floating shapes -->
+    <div class="hero-shapes">
+      <div class="hero-shape shape-1"></div>
+      <div class="hero-shape shape-2"></div>
+      <div class="hero-shape shape-3"></div>
     </div>
     <div class="hero-content">
       <div class="hero-badge" data-reveal>
@@ -232,6 +244,25 @@
   <!-- Phone Mockup Showcase -->
   <section class="phone-showcase">
     <div class="phone-showcase-inner">
+      <!-- Floating feature badges -->
+      <div class="floating-badges">
+        <div class="floating-badge badge-1">
+          <span class="badge-icon">&#9889;</span>
+          <span>3s payments</span>
+        </div>
+        <div class="floating-badge badge-2">
+          <span class="badge-icon">&#128274;</span>
+          <span>Bank-grade security</span>
+        </div>
+        <div class="floating-badge badge-3">
+          <span class="badge-icon">&#127757;</span>
+          <span>Multi-currency</span>
+        </div>
+        <div class="floating-badge badge-4">
+          <span class="badge-icon">&#128241;</span>
+          <span>No hardware needed</span>
+        </div>
+      </div>
       <div class="phone-container">
         <div class="phone-wrapper phone-left" style="transform: perspective(1200px) rotateY(30deg) rotateX(10deg);">
           <div class="phone-frame">
@@ -540,6 +571,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollToPlugin.min.js"></script>
   <script src="https://unpkg.com/lenis@1.1.13/dist/lenis.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://unpkg.com/split-type@0.3.4/umd/index.min.js"></script>
   <script src="js/main.js" type="module"></script>
 </body>
 </html>

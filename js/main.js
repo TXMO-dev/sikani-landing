@@ -225,16 +225,30 @@ function initHeroScene() {
 function initAnimations() {
   initHeroScene();
 
-  // Hero text reveal
-  gsap.from('.hero-line', {
-    y: 80,
-    opacity: 0,
-    rotationX: -15,
-    stagger: 0.12,
-    duration: 1.2,
-    ease: 'power3.out',
-    delay: 0.2,
-  });
+  // Hero text reveal — character-by-character with SplitType
+  if (typeof SplitType !== 'undefined') {
+    const heroTitle = new SplitType('.hero-title', { types: 'chars, words' });
+    gsap.from(heroTitle.chars, {
+      y: 100,
+      opacity: 0,
+      rotateX: -90,
+      stagger: 0.02,
+      duration: 1,
+      ease: 'back.out(1.7)',
+      delay: 0.3,
+    });
+  } else {
+    // Fallback if SplitType fails to load
+    gsap.from('.hero-line', {
+      y: 80,
+      opacity: 0,
+      rotationX: -15,
+      stagger: 0.12,
+      duration: 1.2,
+      ease: 'power3.out',
+      delay: 0.2,
+    });
+  }
 
   // Reveal elements on scroll
   gsap.utils.toArray('[data-reveal]').forEach((el) => {
@@ -302,16 +316,18 @@ function initAnimations() {
     });
   });
 
-  // Feature cards stagger
+  // Feature cards stagger with rotation
   gsap.from('.feature', {
+    y: 60,
+    opacity: 0,
+    rotateX: -5,
+    rotateZ: -2,
+    stagger: { each: 0.08, from: 'start' },
     scrollTrigger: {
       trigger: '.features-grid',
-      start: 'top 80%',
+      start: 'top 75%',
     },
-    y: 40,
-    opacity: 0,
-    stagger: 0.1,
-    duration: 0.6,
+    duration: 0.8,
     ease: 'power3.out',
   });
 
@@ -500,6 +516,172 @@ function initAnimations() {
           ease: 'power3.out',
         }
       );
+    });
+  }
+
+  // ── Scroll Progress Indicator ────────────────────────────────────────
+  const scrollProgress = document.querySelector('.scroll-progress');
+  if (scrollProgress) {
+    gsap.to(scrollProgress, {
+      scaleX: 1,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: document.body,
+        start: 'top top',
+        end: 'bottom bottom',
+        scrub: 0.3,
+      },
+    });
+  }
+
+  // ── Gradient Mesh Background Shift on Scroll ─────────────────────────
+  const gradientBg = document.querySelector('.gradient-bg');
+  if (gradientBg) {
+    gsap.to(gradientBg, {
+      background:
+        'radial-gradient(ellipse at 80% 30%, rgba(212,175,55,0.06) 0%, transparent 50%), ' +
+        'radial-gradient(ellipse at 20% 70%, rgba(212,175,55,0.04) 0%, transparent 50%), ' +
+        'radial-gradient(ellipse at 60% 50%, rgba(184,150,15,0.05) 0%, transparent 50%)',
+      scrollTrigger: {
+        trigger: document.body,
+        start: 'top top',
+        end: 'bottom bottom',
+        scrub: 2,
+      },
+    });
+  }
+
+  // ── Hero Parallax Floating Shapes ────────────────────────────────────
+  const heroShapes = document.querySelectorAll('.hero-shape');
+  if (heroShapes.length > 0) {
+    // Floating entrance
+    gsap.from('.hero-shape.shape-1', { x: -100, opacity: 0, duration: 2, delay: 0.5, ease: 'power2.out' });
+    gsap.from('.hero-shape.shape-2', { x: 100, opacity: 0, duration: 2, delay: 0.7, ease: 'power2.out' });
+    gsap.from('.hero-shape.shape-3', { y: 80, opacity: 0, duration: 2, delay: 0.9, ease: 'power2.out' });
+
+    // Parallax on scroll
+    gsap.to('.hero-shape.shape-1', {
+      y: -150,
+      scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom top', scrub: 1 },
+    });
+    gsap.to('.hero-shape.shape-2', {
+      y: -80,
+      x: 40,
+      scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom top', scrub: 1 },
+    });
+    gsap.to('.hero-shape.shape-3', {
+      y: -200,
+      scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom top', scrub: 1 },
+    });
+
+    // Mouse parallax on hero shapes
+    const hero = document.getElementById('hero');
+    if (hero && window.matchMedia('(hover: hover)').matches) {
+      hero.addEventListener('mousemove', (e) => {
+        const rect = hero.getBoundingClientRect();
+        const mx = (e.clientX - rect.left) / rect.width - 0.5;
+        const my = (e.clientY - rect.top) / rect.height - 0.5;
+        gsap.to('.hero-shape.shape-1', { x: mx * -40, y: my * -30, duration: 1, ease: 'power2.out' });
+        gsap.to('.hero-shape.shape-2', { x: mx * 25, y: my * 20, duration: 1.2, ease: 'power2.out' });
+        gsap.to('.hero-shape.shape-3', { x: mx * -15, y: my * 25, duration: 1.4, ease: 'power2.out' });
+      });
+    }
+  }
+
+  // ── Section Clip-Path Reveal + Scale on Scroll ───────────────────────
+  gsap.utils.toArray('.section').forEach((section) => {
+    // Clip-path inset reveal
+    gsap.fromTo(section,
+      { clipPath: 'inset(15% 5% 15% 5% round 24px)' },
+      {
+        clipPath: 'inset(0% 0% 0% 0% round 0px)',
+        scrollTrigger: {
+          trigger: section,
+          start: 'top bottom',
+          end: 'top 60%',
+          scrub: 1,
+        },
+      }
+    );
+
+    // Container scale-up
+    const container = section.querySelector('.container');
+    if (container) {
+      gsap.fromTo(container,
+        { scale: 0.92, opacity: 0.5 },
+        {
+          scale: 1,
+          opacity: 1,
+          scrollTrigger: {
+            trigger: section,
+            start: 'top 80%',
+            end: 'top 30%',
+            scrub: 1,
+          },
+        }
+      );
+    }
+  });
+
+  // ── Floating Badges — Bobbing + Parallax ─────────────────────────────
+  const badges = document.querySelectorAll('.floating-badge');
+  if (badges.length > 0) {
+    badges.forEach((badge, i) => {
+      // Staggered entrance
+      gsap.from(badge, {
+        opacity: 0,
+        scale: 0.7,
+        y: 30,
+        duration: 0.8,
+        delay: 0.2 + i * 0.15,
+        ease: 'back.out(1.7)',
+        scrollTrigger: {
+          trigger: '.phone-showcase',
+          start: 'top 70%',
+        },
+      });
+
+      // Continuous bobbing with offset
+      gsap.to(badge, {
+        y: '-=12',
+        duration: 2 + i * 0.3,
+        ease: 'sine.inOut',
+        repeat: -1,
+        yoyo: true,
+        delay: i * 0.5,
+      });
+    });
+
+    // Parallax on scroll
+    gsap.to('.badge-1', {
+      y: -40,
+      scrollTrigger: { trigger: '.phone-showcase', start: 'top bottom', end: 'bottom top', scrub: 1 },
+    });
+    gsap.to('.badge-2', {
+      y: -60,
+      scrollTrigger: { trigger: '.phone-showcase', start: 'top bottom', end: 'bottom top', scrub: 1 },
+    });
+    gsap.to('.badge-3', {
+      y: -30,
+      scrollTrigger: { trigger: '.phone-showcase', start: 'top bottom', end: 'bottom top', scrub: 1 },
+    });
+    gsap.to('.badge-4', {
+      y: -50,
+      scrollTrigger: { trigger: '.phone-showcase', start: 'top bottom', end: 'bottom top', scrub: 1 },
+    });
+  }
+
+  // ── Footer Curtain Reveal ────────────────────────────────────────────
+  const footer = document.querySelector('.footer');
+  if (footer) {
+    ScrollTrigger.create({
+      trigger: footer,
+      start: 'top bottom',
+      end: 'top top',
+      scrub: true,
+      onUpdate: (self) => {
+        gsap.set(footer, { y: (1 - self.progress) * -100 });
+      },
     });
   }
 }
