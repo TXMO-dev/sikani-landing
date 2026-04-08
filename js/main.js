@@ -3,26 +3,31 @@
    GSAP + ScrollTrigger + Lenis + Three.js + Custom cursor
    ═══════════════════════════════════════════════════════════════════════════ */
 
+// ── Device detection ──────────────────────────────────────────────────────
+const isMobile = window.innerWidth < 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 // ── Register GSAP Plugins ─────────────────────────────────────────────────
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
-// ── Lenis Smooth Scroll ───────────────────────────────────────────────────
-const lenis = new Lenis({
+// ── Lenis Smooth Scroll (skip on mobile for native momentum scrolling) ────
+const lenis = isMobile ? null : new Lenis({
   duration: 1.2,
   easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
   smoothWheel: true,
 });
 
-function raf(time) {
-  lenis.raf(time);
+if (lenis) {
+  function raf(time) {
+    lenis.raf(time);
+    requestAnimationFrame(raf);
+  }
   requestAnimationFrame(raf);
+  lenis.on('scroll', ScrollTrigger.update);
+  gsap.ticker.add((time) => lenis.raf(time * 1000));
+  gsap.ticker.lagSmoothing(0);
 }
-requestAnimationFrame(raf);
-
-// Sync Lenis with ScrollTrigger
-lenis.on('scroll', ScrollTrigger.update);
-gsap.ticker.add((time) => lenis.raf(time * 1000));
-gsap.ticker.lagSmoothing(0);
 
 // ── Loader ────────────────────────────────────────────────────────────────
 const loader = document.getElementById('loader');
@@ -127,7 +132,10 @@ document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
   anchor.addEventListener('click', (e) => {
     e.preventDefault();
     const target = document.querySelector(anchor.getAttribute('href'));
-    if (target) lenis.scrollTo(target, { offset: -80 });
+    if (target) {
+      if (lenis) lenis.scrollTo(target, { offset: -80 });
+      else target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   });
 });
 
@@ -140,10 +148,10 @@ function initHeroScene() {
   const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
   const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setPixelRatio(isMobile ? 1 : Math.min(window.devicePixelRatio, 2));
 
   // Particle system — gold floating particles
-  const particleCount = 800;
+  const particleCount = isMobile ? 200 : 800;
   const geometry = new THREE.BufferGeometry();
   const positions = new Float32Array(particleCount * 3);
   const velocities = new Float32Array(particleCount * 3);
