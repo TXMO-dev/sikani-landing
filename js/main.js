@@ -345,31 +345,26 @@ function initAnimations() {
   });
 
   // Security items
-  gsap.from('.security-item', {
-    scrollTrigger: {
-      trigger: '.security-grid',
-      start: 'top 80%',
+  gsap.set('.security-item', { opacity: 0, y: 25 });
+  ScrollTrigger.create({
+    trigger: '.security-grid',
+    start: 'top 85%',
+    once: true,
+    onEnter: () => {
+      gsap.to('.security-item', { y: 0, opacity: 1, stagger: 0.1, duration: 0.5, ease: 'power3.out' });
     },
-    y: 30,
-    opacity: 0,
-    stagger: 0.1,
-    duration: 0.5,
-    ease: 'power3.out',
   });
 
   // Download section
-  gsap.from('.store-btn', {
-    scrollTrigger: {
-      trigger: '.download-buttons',
-      start: 'top 80%',
+  gsap.set('.store-btn', { opacity: 0, y: 15 });
+  ScrollTrigger.create({
+    trigger: '.download-buttons',
+    start: 'top 90%',
+    once: true,
+    onEnter: () => {
+      gsap.to('.store-btn', { y: 0, opacity: 1, stagger: 0.15, duration: 0.5, ease: 'power3.out' });
     },
-    y: 20,
-    opacity: 0,
-    stagger: 0.15,
-    duration: 0.6,
-    ease: 'power3.out',
   });
-
   // ── About section cards ──────────────────────────────────────────────
   gsap.set('.about-card', { opacity: 0, y: 40 });
   ScrollTrigger.create({
