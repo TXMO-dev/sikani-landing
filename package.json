@@ -1,0 +1,13 @@
+{
+  "name": "sikani-landing",
+  "version": "1.0.0",
+  "description": "Sikani Technologies - Smart POS Landing Page",
+  "scripts": {
+    "dev": "npx serve . -p 4000",
+    "test": "npx playwright test",
+    "lighthouse": "npx lighthouse http://localhost:4000 --output=json --output-path=./tests/lighthouse-report.json --chrome-flags=\"--headless\""
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.50.0"
+  }
+}
