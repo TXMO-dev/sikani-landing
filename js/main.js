@@ -487,36 +487,35 @@ function initAnimations() {
   const words = document.querySelectorAll('.reveal-word');
 
   if (revealSection && words.length > 0) {
-    // Pin the section while words animate
-    ScrollTrigger.create({
-      trigger: revealSection,
-      start: 'top top',
-      end: '+=150%',
-      pin: true,
-      anticipatePin: 1,
+    // Use a single timeline pinned to the section for reliable word-by-word reveal
+    const revealTl = gsap.timeline({
+      scrollTrigger: {
+        trigger: revealSection,
+        start: 'top top',
+        end: '+=200%',
+        pin: true,
+        scrub: 0.5,
+        anticipatePin: 1,
+      },
     });
 
+    // Set initial state
+    gsap.set(words, { opacity: 0.08, y: 30, filter: 'blur(6px)', scale: 0.95 });
+
     words.forEach((word, i) => {
-      gsap.fromTo(word,
-        {
-          opacity: 0.08,
-          y: 20,
-          filter: 'blur(4px)',
-        },
-        {
-          scrollTrigger: {
-            trigger: revealSection,
-            start: () => 'top+=' + (i * (150 / words.length)) + '% top',
-            end: () => 'top+=' + ((i + 1) * (150 / words.length)) + '% top',
-            scrub: true,
-          },
-          opacity: 1,
-          y: 0,
-          filter: 'blur(0px)',
-          ease: 'power3.out',
-        }
-      );
+      revealTl.to(word, {
+        opacity: 1,
+        y: 0,
+        filter: 'blur(0px)',
+        scale: 1,
+        duration: 1,
+        ease: 'power2.out',
+      }, i * 0.6); // stagger each word
     });
+
+    // Hold the fully revealed text for a beat
+    revealTl.to({}, { duration: 2 });
+
   }
 
   // ── Scroll Progress Indicator ────────────────────────────────────────
