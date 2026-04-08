@@ -239,32 +239,40 @@ function initAnimations() {
   // Reveal elements on scroll
   gsap.utils.toArray('[data-reveal]').forEach((el) => {
     const delay = parseFloat(el.dataset.delay || 0);
-    gsap.from(el, {
-      scrollTrigger: {
-        trigger: el,
-        start: 'top 85%',
-        toggleActions: 'play none none none',
-      },
-      y: 40,
-      opacity: 0,
-      duration: 0.8,
-      delay,
-      ease: 'power3.out',
-    });
+    gsap.fromTo(el,
+      { y: 30, opacity: 0 },
+      {
+        scrollTrigger: {
+          trigger: el,
+          start: 'top 90%',
+          toggleActions: 'play none none none',
+          once: true, // only animate once — never re-hide
+        },
+        y: 0,
+        opacity: 1,
+        duration: 0.7,
+        delay,
+        ease: 'power3.out',
+      }
+    );
   });
 
   // Section titles
   gsap.utils.toArray('[data-split]').forEach((el) => {
-    gsap.from(el, {
-      scrollTrigger: {
-        trigger: el,
-        start: 'top 80%',
-      },
-      y: 30,
-      opacity: 0,
-      duration: 0.8,
-      ease: 'power3.out',
-    });
+    gsap.fromTo(el,
+      { y: 25, opacity: 0 },
+      {
+        scrollTrigger: {
+          trigger: el,
+          start: 'top 85%',
+          once: true,
+        },
+        y: 0,
+        opacity: 1,
+        duration: 0.8,
+        ease: 'power3.out',
+      }
+    );
   });
 
   // Counting animation for stats (hero + about)
@@ -303,33 +311,37 @@ function initAnimations() {
   });
 
   // Feature cards stagger with rotation
-  gsap.from('.feature', {
-    y: 60,
-    opacity: 0,
-    rotateX: -5,
-    rotateZ: -2,
-    stagger: { each: 0.08, from: 'start' },
-    scrollTrigger: {
-      trigger: '.features-grid',
-      start: 'top 75%',
+  gsap.set('.feature', { opacity: 0, y: 40 });
+  ScrollTrigger.create({
+    trigger: '.features-grid',
+    start: 'top 80%',
+    once: true,
+    onEnter: () => {
+      gsap.to('.feature', {
+        y: 0, opacity: 1,
+        stagger: 0.08,
+        duration: 0.7,
+        ease: 'power3.out',
+      });
     },
-    duration: 0.8,
-    ease: 'power3.out',
   });
-
   // Steps animation
   gsap.utils.toArray('.step').forEach((step, i) => {
-    gsap.from(step, {
+    gsap.fromTo(step,
+      { x: -20, opacity: 0 },
+      {
       scrollTrigger: {
         trigger: step,
-        start: 'top 80%',
+        start: 'top 85%',
+        once: true,
       },
-      x: -30,
-      opacity: 0,
+      x: 0,
+      opacity: 1,
       duration: 0.6,
       delay: i * 0.15,
       ease: 'power3.out',
-    });
+    }
+    );
   });
 
   // Security items
@@ -359,16 +371,19 @@ function initAnimations() {
   });
 
   // ── About section cards ──────────────────────────────────────────────
-  gsap.from('.about-card', {
-    scrollTrigger: {
-      trigger: '.about-cards',
-      start: 'top 80%',
+  gsap.set('.about-card', { opacity: 0, y: 40 });
+  ScrollTrigger.create({
+    trigger: '.about-cards',
+    start: 'top 85%',
+    once: true,
+    onEnter: () => {
+      gsap.to('.about-card', {
+        y: 0, opacity: 1,
+        stagger: 0.12,
+        duration: 0.7,
+        ease: 'power3.out',
+      });
     },
-    y: 50,
-    opacity: 0,
-    stagger: 0.15,
-    duration: 0.8,
-    ease: 'power3.out',
   });
 
   // ── Phone Mockup Scroll Animation ────────────────────────────────────
