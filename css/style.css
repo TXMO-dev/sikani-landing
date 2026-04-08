@@ -2205,3 +2205,93 @@ button { cursor: none; border: none; background: none; font: inherit; color: inh
   .section + .section {  }
   .nav-active-dot { display: none; }
 }
+
+/* ── NFC Coming Soon Teaser ─────────────────────────────────────────────── */
+.nfc-teaser {
+  margin-top: 60px;
+}
+
+.nfc-teaser-inner {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 32px 40px;
+  background: linear-gradient(135deg, rgba(212,175,55,0.06) 0%, rgba(212,175,55,0.02) 100%);
+  border: 1px solid rgba(212,175,55,0.15);
+  border-radius: var(--radius);
+  transition: all 0.4s var(--ease);
+  position: relative;
+  overflow: hidden;
+}
+
+.nfc-teaser-inner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.nfc-teaser-inner:hover::before { opacity: 1; }
+
+.nfc-teaser-inner:hover {
+  border-color: rgba(212,175,55,0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 40px rgba(212,175,55,0.08);
+}
+
+.nfc-icon-wrap {
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(212,175,55,0.08);
+  border-radius: 20px;
+  flex-shrink: 0;
+}
+
+.nfc-icon {
+  animation: nfc-pulse 2s ease-in-out infinite;
+}
+
+@keyframes nfc-pulse {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+.nfc-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(212,175,55,0.12);
+  border: 1px solid rgba(212,175,55,0.25);
+  border-radius: 100px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-family: var(--font-display);
+  margin-bottom: 10px;
+}
+
+.nfc-text h3 {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.nfc-text p {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+
+@media (max-width: 768px) {
+  .nfc-teaser-inner { flex-direction: column; text-align: center; padding: 24px; }
+}
