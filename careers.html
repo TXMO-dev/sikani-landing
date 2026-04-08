@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Careers | Sikani Technologies</title>
+  <meta name="description" content="Join Sikani Technologies. We're building the future of digital payments in Africa and beyond. See our open positions.">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Careers | Sikani Technologies">
+  <meta property="og:description" content="Join the team building the future of payments.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://sikani.tech/careers">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/jpeg" href="assets/images/sikani_logo_icon.jpeg">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/style.css">
+
+  <!-- TODO: Integrate Sanity.io CMS for dynamic job listings -->
+  <!-- Schema: { title, department, location, type, deadline, requirements[], description } -->
+  <!-- Fetch from Sanity API and render dynamically instead of static HTML -->
+
+  <style>
+    /* ── Careers Page Styles ─────────────────────────────────────────────── */
+
+    /* Reset cursor for careers page (no custom cursor) */
+    body { cursor: default; }
+    button { cursor: pointer; }
+    a { cursor: pointer; }
+
+    .careers-hero {
+      min-height: 60vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 160px 24px 80px;
+      position: relative;
+    }
+
+    .careers-hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      font-weight: 700;
+      line-height: 1.1;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, var(--gold-dark), var(--gold), var(--gold-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .careers-hero .subtitle {
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      color: var(--text-muted);
+      max-width: 600px;
+      line-height: 1.6;
+      margin-bottom: 60px;
+    }
+
+    /* Culture cards */
+    .culture-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 24px;
+      max-width: 900px;
+      width: 100%;
+    }
+
+    .culture-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px 24px;
+      text-align: center;
+      transition: border-color 0.3s var(--ease), transform 0.3s var(--ease);
+    }
+
+    .culture-card:hover {
+      border-color: var(--border-hover);
+      transform: translateY(-4px);
+    }
+
+    .culture-card .culture-icon {
+      font-size: 2rem;
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .culture-card h3 {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--gold);
+    }
+
+    .culture-card p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Open Positions section */
+    .positions-section {
+      padding: 60px 24px 120px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .positions-section h2 {
+      font-family: var(--font-display);
+      font-size: clamp(1.8rem, 3.5vw, 2.5rem);
+      font-weight: 700;
+      margin-bottom: 40px;
+      text-align: center;
+    }
+
+    /* Job card */
+    .job-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--gold);
+      border-radius: var(--radius);
+      padding: 28px 28px 24px;
+      margin-bottom: 24px;
+      transition: border-color 0.3s var(--ease), transform 0.3s var(--ease);
+      opacity: 0;
+      transform: translateY(30px);
+    }
+
+    .job-card.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .job-card:hover {
+      border-color: var(--border-hover);
+      transform: translateY(-2px);
+    }
+
+    .job-card.expired {
+      opacity: 0.6;
+    }
+
+    .job-card.expired.visible {
+      opacity: 0.6;
+    }
+
+    .job-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .job-title {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .job-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+    }
+
+    .badge-dept-engineering {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.25);
+    }
+
+    .badge-dept-design {
+      background: rgba(168, 85, 247, 0.15);
+      color: #c084fc;
+      border: 1px solid rgba(168, 85, 247, 0.25);
+    }
+
+    .badge-dept-marketing {
+      background: rgba(34, 197, 94, 0.15);
+      color: #4ade80;
+      border: 1px solid rgba(34, 197, 94, 0.25);
+    }
+
+    .badge-location, .badge-type {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-muted);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .badge-open {
+      background: rgba(34, 197, 94, 0.15);
+      color: #4ade80;
+      border: 1px solid rgba(34, 197, 94, 0.25);
+    }
+
+    .badge-closed {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.25);
+    }
+
+    .job-deadline {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .job-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn-apply {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 24px;
+      background: var(--gold);
+      color: var(--bg);
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 0.9rem;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      transition: background 0.3s var(--ease), transform 0.15s var(--ease);
+    }
+
+    .btn-apply:hover {
+      background: var(--gold-light);
+      transform: translateY(-1px);
+    }
+
+    .btn-apply:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-apply:disabled:hover {
+      background: var(--gold);
+    }
+
+    .btn-toggle-reqs {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 20px;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: color 0.3s var(--ease), border-color 0.3s var(--ease);
+    }
+
+    .btn-toggle-reqs:hover {
+      color: var(--text);
+      border-color: var(--border-hover);
+    }
+
+    .btn-toggle-reqs .chevron {
+      transition: transform 0.3s var(--ease);
+      display: inline-block;
+    }
+
+    .btn-toggle-reqs.open .chevron {
+      transform: rotate(180deg);
+    }
+
+    .job-requirements {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s var(--ease), margin-top 0.3s var(--ease);
+      margin-top: 0;
+    }
+
+    .job-requirements.open {
+      max-height: 400px;
+      margin-top: 20px;
+    }
+
+    .job-requirements ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .job-requirements li {
+      position: relative;
+      padding-left: 20px;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .job-requirements li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 8px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--gold);
+    }
+
+    /* ── Modal ──────────────────────────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      z-index: 10000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      width: 100%;
+      max-width: 560px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 36px;
+      position: relative;
+      animation: modalIn 0.35s var(--ease);
+    }
+
+    @keyframes modalIn {
+      from { opacity: 0; transform: translateY(20px) scale(0.97); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .modal-close:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: var(--text);
+    }
+
+    .modal h2 {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .modal .modal-subtitle {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 28px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+
+    .form-group label .required {
+      color: #f87171;
+      margin-left: 2px;
+    }
+
+    .form-group input[type="text"],
+    .form-group input[type="email"],
+    .form-group input[type="tel"],
+    .form-group input[type="url"],
+    .form-group textarea {
+      width: 100%;
+      padding: 12px 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+      border-color: var(--gold);
+    }
+
+    .form-group textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .char-count {
+      text-align: right;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+
+    /* File upload area */
+    .file-upload {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-sm);
+      padding: 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.3s, background 0.3s;
+      position: relative;
+    }
+
+    .file-upload:hover, .file-upload.dragover {
+      border-color: var(--gold);
+      background: rgba(212, 175, 55, 0.03);
+    }
+
+    .file-upload input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .file-upload-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .file-upload-label strong {
+      color: var(--gold);
+    }
+
+    .file-upload .file-info {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      margin-top: 6px;
+    }
+
+    .file-upload .file-selected {
+      color: var(--gold);
+      font-size: 0.85rem;
+      margin-top: 8px;
+    }
+
+    /* Checkbox */
+    .form-checkbox {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .form-checkbox input[type="checkbox"] {
+      margin-top: 3px;
+      accent-color: var(--gold);
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
+    .form-checkbox label {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .form-checkbox label a {
+      color: var(--gold);
+      text-decoration: underline;
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 14px;
+      background: var(--gold);
+      color: var(--bg);
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 1rem;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: background 0.3s, transform 0.15s;
+    }
+
+    .btn-submit:hover {
+      background: var(--gold-light);
+      transform: translateY(-1px);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .form-error {
+      color: #f87171;
+      font-size: 0.8rem;
+      margin-top: 4px;
+      display: none;
+    }
+
+    .form-error.show {
+      display: block;
+    }
+
+    /* Success state */
+    .success-state {
+      text-align: center;
+      padding: 40px 20px;
+      display: none;
+    }
+
+    .success-state.active {
+      display: block;
+    }
+
+    .success-checkmark {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 20px;
+      border-radius: 50%;
+      background: rgba(34, 197, 94, 0.15);
+      border: 2px solid #4ade80;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: checkPop 0.5s var(--ease);
+    }
+
+    @keyframes checkPop {
+      0% { transform: scale(0); opacity: 0; }
+      60% { transform: scale(1.15); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .success-checkmark svg {
+      width: 28px;
+      height: 28px;
+      stroke: #4ade80;
+      fill: none;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .success-state h3 {
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .success-state p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    .btn-close-success {
+      padding: 10px 28px;
+      background: var(--gold);
+      color: var(--bg);
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 0.9rem;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .btn-close-success:hover {
+      background: var(--gold-light);
+    }
+
+    /* ── Responsive ─────────────────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .careers-hero { padding: 140px 20px 60px; }
+      .culture-cards { grid-template-columns: 1fr; max-width: 400px; }
+      .positions-section { padding: 40px 16px 80px; }
+      .job-header { flex-direction: column; }
+      .modal { padding: 24px; margin: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Gradient mesh background -->
+  <div class="gradient-bg"></div>
+
+  <!-- Navigation -->
+  <nav id="nav" class="nav scrolled">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">
+        <img src="assets/images/sikani_logo_icon.jpeg" alt="Sikani" class="nav-logo-img">
+        <span class="nav-logo-text">SIKANI</span>
+      </a>
+      <div class="nav-links">
+        <a href="index.html#about" class="nav-link">About</a>
+        <a href="index.html#product" class="nav-link">Product</a>
+        <a href="index.html#features" class="nav-link">Features</a>
+        <a href="index.html#how-it-works" class="nav-link">How it works</a>
+        <a href="index.html#security" class="nav-link">Security</a>
+      </div>
+      <div class="nav-actions">
+        <a href="index.html#download" class="nav-cta">
+          <span>Get Started</span>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 7h12M8 2l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+      <button class="nav-menu-btn" id="menuBtn" aria-label="Menu">
+        <span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile menu -->
+  <div id="mobileMenu" class="mobile-menu">
+    <div class="mobile-menu-inner">
+      <a href="index.html#about" class="mobile-link">About</a>
+      <a href="index.html#product" class="mobile-link">Product</a>
+      <a href="index.html#features" class="mobile-link">Features</a>
+      <a href="index.html#how-it-works" class="mobile-link">How it works</a>
+      <a href="index.html#security" class="mobile-link">Security</a>
+      <a href="index.html#download" class="mobile-link cta">Get Started</a>
+    </div>
+  </div>
+
+  <!-- Hero Section -->
+  <section class="careers-hero">
+    <h1>Join the team building the future of payments</h1>
+    <p class="subtitle">We're looking for passionate people who want to make digital payments accessible to everyone.</p>
+
+    <div class="culture-cards">
+      <div class="culture-card">
+        <span class="culture-icon">&#127760;</span>
+        <h3>Remote-first</h3>
+        <p>Work from anywhere in the world. We believe great talent isn't limited by geography.</p>
+      </div>
+      <div class="culture-card">
+        <span class="culture-icon">&#127793;</span>
+        <h3>Impact-driven</h3>
+        <p>Every line of code you write helps make payments more accessible across Africa and beyond.</p>
+      </div>
+      <div class="culture-card">
+        <span class="culture-icon">&#128640;</span>
+        <h3>Growth-focused</h3>
+        <p>Continuous learning, mentorship, and career growth are at the core of our culture.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Open Positions -->
+  <section class="positions-section">
+    <h2>Open Positions</h2>
+
+    <!-- TODO: Fetch job listings from Sanity CMS API instead of static HTML -->
+
+    <!-- Job 1: Senior Backend Engineer -->
+    <div class="job-card" data-deadline="2026-06-30">
+      <div class="job-header">
+        <h3 class="job-title">Senior Backend Engineer (.NET)</h3>
+      </div>
+      <div class="job-meta">
+        <span class="badge badge-dept-engineering">Engineering</span>
+        <span class="badge badge-location">Remote (Ghana / Worldwide)</span>
+        <span class="badge badge-type">Full-time</span>
+      </div>
+      <div class="job-deadline">
+        <span class="deadline-badge badge"></span>
+      </div>
+      <div class="job-actions">
+        <button class="btn-apply" data-job="Senior Backend Engineer (.NET)">Apply</button>
+        <button class="btn-toggle-reqs">Requirements <span class="chevron">&#9662;</span></button>
+      </div>
+      <div class="job-requirements">
+        <ul>
+          <li>5+ years of experience with .NET / C#</li>
+          <li>Strong knowledge of GraphQL API design</li>
+          <li>Experience with PostgreSQL and relational database design</li>
+          <li>Payment systems or fintech experience preferred</li>
+          <li>Familiarity with event-driven architecture and CQRS patterns</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Job 2: Mobile Engineer -->
+    <div class="job-card" data-deadline="2026-05-31">
+      <div class="job-header">
+        <h3 class="job-title">Mobile Engineer (React Native)</h3>
+      </div>
+      <div class="job-meta">
+        <span class="badge badge-dept-engineering">Engineering</span>
+        <span class="badge badge-location">Remote (Ghana / Worldwide)</span>
+        <span class="badge badge-type">Full-time</span>
+      </div>
+      <div class="job-deadline">
+        <span class="deadline-badge badge"></span>
+      </div>
+      <div class="job-actions">
+        <button class="btn-apply" data-job="Mobile Engineer (React Native)">Apply</button>
+        <button class="btn-toggle-reqs">Requirements <span class="chevron">&#9662;</span></button>
+      </div>
+      <div class="job-requirements">
+        <ul>
+          <li>3+ years of experience with React Native</li>
+          <li>Proficiency with Expo and TypeScript</li>
+          <li>Experience building mobile payment UX and flows</li>
+          <li>Understanding of mobile security best practices</li>
+          <li>Published apps on App Store and/or Google Play</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Job 3: Product Designer (expired) -->
+    <div class="job-card" data-deadline="2026-04-01">
+      <div class="job-header">
+        <h3 class="job-title">Product Designer (UI/UX)</h3>
+      </div>
+      <div class="job-meta">
+        <span class="badge badge-dept-design">Design</span>
+        <span class="badge badge-location">Remote</span>
+        <span class="badge badge-type">Full-time</span>
+      </div>
+      <div class="job-deadline">
+        <span class="deadline-badge badge"></span>
+      </div>
+      <div class="job-actions">
+        <button class="btn-apply" data-job="Product Designer (UI/UX)">Apply</button>
+        <button class="btn-toggle-reqs">Requirements <span class="chevron">&#9662;</span></button>
+      </div>
+      <div class="job-requirements">
+        <ul>
+          <li>4+ years of product design experience</li>
+          <li>Expert-level proficiency with Figma</li>
+          <li>Fintech or payments industry experience</li>
+          <li>Strong portfolio demonstrating end-to-end design process</li>
+          <li>Experience with design systems and component libraries</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Job 4: DevOps Engineer -->
+    <div class="job-card" data-deadline="2026-07-15">
+      <div class="job-header">
+        <h3 class="job-title">DevOps Engineer</h3>
+      </div>
+      <div class="job-meta">
+        <span class="badge badge-dept-engineering">Engineering</span>
+        <span class="badge badge-location">Remote</span>
+        <span class="badge badge-type">Full-time</span>
+      </div>
+      <div class="job-deadline">
+        <span class="deadline-badge badge"></span>
+      </div>
+      <div class="job-actions">
+        <button class="btn-apply" data-job="DevOps Engineer">Apply</button>
+        <button class="btn-toggle-reqs">Requirements <span class="chevron">&#9662;</span></button>
+      </div>
+      <div class="job-requirements">
+        <ul>
+          <li>Strong experience with Docker and Kubernetes</li>
+          <li>CI/CD pipeline design and maintenance</li>
+          <li>PostgreSQL database administration</li>
+          <li>Experience with MinIO / S3-compatible object storage</li>
+          <li>Infrastructure as Code (Terraform, Ansible, or similar)</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Application Modal -->
+  <div class="modal-overlay" id="applicationModal">
+    <div class="modal">
+      <button class="modal-close" id="modalClose" aria-label="Close">&times;</button>
+
+      <!-- Form state -->
+      <div id="formState">
+        <h2>Apply for <span id="modalJobTitle"></span></h2>
+        <p class="modal-subtitle">Fill out the form below and we'll get back to you within 5 business days.</p>
+
+        <form id="applicationForm" novalidate>
+          <div class="form-group">
+            <label>Full Name <span class="required">*</span></label>
+            <input type="text" id="fieldName" name="name" required placeholder="Your full name">
+            <div class="form-error" id="errorName">Please enter your full name.</div>
+          </div>
+
+          <div class="form-group">
+            <label>Email <span class="required">*</span></label>
+            <input type="email" id="fieldEmail" name="email" required placeholder="you@example.com">
+            <div class="form-error" id="errorEmail">Please enter a valid email address.</div>
+          </div>
+
+          <div class="form-group">
+            <label>Phone</label>
+            <input type="tel" id="fieldPhone" name="phone" placeholder="+233 XX XXX XXXX">
+          </div>
+
+          <div class="form-group">
+            <label>LinkedIn URL</label>
+            <input type="url" id="fieldLinkedin" name="linkedin" placeholder="https://linkedin.com/in/yourprofile">
+          </div>
+
+          <div class="form-group">
+            <label>Resume (PDF) <span class="required">*</span></label>
+            <div class="file-upload" id="resumeUpload">
+              <input type="file" id="fieldResume" name="resume" accept=".pdf" required>
+              <p class="file-upload-label"><strong>Click to upload</strong> or drag and drop</p>
+              <p class="file-info">PDF only, max 5MB</p>
+              <p class="file-selected" id="resumeFileName"></p>
+            </div>
+            <div class="form-error" id="errorResume">Please upload your resume (PDF, max 5MB).</div>
+          </div>
+
+          <div class="form-group">
+            <label>Cover Letter (PDF)</label>
+            <div class="file-upload" id="coverUpload">
+              <input type="file" id="fieldCover" name="cover_letter" accept=".pdf">
+              <p class="file-upload-label"><strong>Click to upload</strong> or drag and drop</p>
+              <p class="file-info">PDF only, max 5MB (optional)</p>
+              <p class="file-selected" id="coverFileName"></p>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Why do you want to work at Sikani?</label>
+            <textarea id="fieldMotivation" name="motivation" maxlength="500" placeholder="Tell us what excites you about joining Sikani Technologies..."></textarea>
+            <div class="char-count"><span id="charCount">0</span> / 500</div>
+          </div>
+
+          <div class="form-checkbox">
+            <input type="checkbox" id="fieldConsent" name="consent" required>
+            <label for="fieldConsent">I agree to the <a href="terms.html" target="_blank">Terms of Service</a> and <a href="privacy.html" target="_blank">Privacy Policy</a></label>
+          </div>
+          <div class="form-error" id="errorConsent" style="margin-top: -16px; margin-bottom: 16px;">You must agree to the Terms and Privacy Policy.</div>
+
+          <button type="submit" class="btn-submit">Submit Application</button>
+        </form>
+      </div>
+
+      <!-- Success state -->
+      <div class="success-state" id="successState">
+        <div class="success-checkmark">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <h3>Application Submitted!</h3>
+        <p>We'll review your application and get back to you within 5 business days.</p>
+        <button class="btn-close-success" id="btnCloseSuccess">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer (same as index.html) -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <img src="assets/images/sikani_logo_icon.jpeg" alt="Sikani" class="footer-logo">
+          <p>Sikani Technologies Pty Ltd</p>
+          <p class="footer-tagline">Making payments seamless everywhere.</p>
+        </div>
+        <div class="footer-links">
+          <div class="footer-col">
+            <h5>Product</h5>
+            <a href="index.html#product">Seller App</a>
+            <a href="index.html#product">Buyer App</a>
+            <a href="index.html#features">Features</a>
+            <a href="index.html#security">Security</a>
+          </div>
+          <div class="footer-col">
+            <h5>Company</h5>
+            <a href="index.html#about">About Us</a>
+            <a href="careers.html">Careers</a>
+            <a href="mailto:info@sikani.tech">Contact</a>
+            <a href="blog.html">Blog</a>
+          </div>
+          <div class="footer-col">
+            <h5>Legal</h5>
+            <a href="privacy.html">Privacy Policy</a>
+            <a href="terms.html">Terms of Service</a>
+            <a href="privacy.html#cookies">Cookie Policy</a>
+            <a href="terms.html#aml">AML Policy</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 Sikani Technologies Pty Ltd. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+  <script>
+    /* ── Deadline Logic ──────────────────────────────────────────────────── */
+    function isExpired(deadline) {
+      return new Date(deadline) < new Date();
+    }
+
+    function formatDate(dateStr) {
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    /* ── Initialize Job Cards ────────────────────────────────────────────── */
+    document.querySelectorAll('.job-card').forEach(card => {
+      const deadline = card.dataset.deadline;
+      const expired = isExpired(deadline);
+      const badgeEl = card.querySelector('.deadline-badge');
+      const applyBtn = card.querySelector('.btn-apply');
+
+      if (expired) {
+        card.classList.add('expired');
+        badgeEl.classList.add('badge-closed');
+        badgeEl.textContent = 'Closed \u2014 Deadline passed';
+        applyBtn.disabled = true;
+      } else {
+        badgeEl.classList.add('badge-open');
+        badgeEl.textContent = 'Open \u2014 Apply by ' + formatDate(deadline);
+      }
+    });
+
+    /* ── Toggle Requirements ─────────────────────────────────────────────── */
+    document.querySelectorAll('.btn-toggle-reqs').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const reqs = btn.closest('.job-card').querySelector('.job-requirements');
+        btn.classList.toggle('open');
+        reqs.classList.toggle('open');
+      });
+    });
+
+    /* ── Mobile Menu ─────────────────────────────────────────────────────── */
+    const menuBtn = document.getElementById('menuBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    if (menuBtn) {
+      menuBtn.addEventListener('click', () => {
+        menuBtn.classList.toggle('open');
+        mobileMenu.classList.toggle('open');
+      });
+      document.querySelectorAll('.mobile-link').forEach(link => {
+        link.addEventListener('click', () => {
+          menuBtn.classList.remove('open');
+          mobileMenu.classList.remove('open');
+        });
+      });
+    }
+
+    /* ── Application Modal ───────────────────────────────────────────────── */
+    const modal = document.getElementById('applicationModal');
+    const modalClose = document.getElementById('modalClose');
+    const formState = document.getElementById('formState');
+    const successState = document.getElementById('successState');
+    const modalJobTitle = document.getElementById('modalJobTitle');
+    const form = document.getElementById('applicationForm');
+    let currentJob = '';
+
+    // Open modal
+    document.querySelectorAll('.btn-apply').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (btn.disabled) return;
+        currentJob = btn.dataset.job;
+        modalJobTitle.textContent = currentJob;
+        formState.style.display = 'block';
+        successState.classList.remove('active');
+        form.reset();
+        clearErrors();
+        clearFileNames();
+        updateCharCount();
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      });
+    });
+
+    // Close modal
+    function closeModal() {
+      modal.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    modalClose.addEventListener('click', closeModal);
+    document.getElementById('btnCloseSuccess').addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.classList.contains('active')) closeModal();
+    });
+
+    /* ── File Upload UI ──────────────────────────────────────────────────── */
+    function setupFileUpload(inputId, displayId, uploadAreaId) {
+      const input = document.getElementById(inputId);
+      const display = document.getElementById(displayId);
+      const area = document.getElementById(uploadAreaId);
+
+      input.addEventListener('change', () => {
+        if (input.files.length > 0) {
+          const file = input.files[0];
+          if (file.size > 5 * 1024 * 1024) {
+            display.textContent = 'File too large (max 5MB)';
+            display.style.color = '#f87171';
+            input.value = '';
+            return;
+          }
+          if (!file.name.toLowerCase().endsWith('.pdf')) {
+            display.textContent = 'Please select a PDF file';
+            display.style.color = '#f87171';
+            input.value = '';
+            return;
+          }
+          display.textContent = file.name;
+          display.style.color = '';
+        } else {
+          display.textContent = '';
+        }
+      });
+
+      // Drag and drop visual feedback
+      area.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        area.classList.add('dragover');
+      });
+      area.addEventListener('dragleave', () => area.classList.remove('dragover'));
+      area.addEventListener('drop', () => area.classList.remove('dragover'));
+    }
+
+    setupFileUpload('fieldResume', 'resumeFileName', 'resumeUpload');
+    setupFileUpload('fieldCover', 'coverFileName', 'coverUpload');
+
+    /* ── Character Count ─────────────────────────────────────────────────── */
+    const motivationField = document.getElementById('fieldMotivation');
+    const charCount = document.getElementById('charCount');
+
+    function updateCharCount() {
+      charCount.textContent = motivationField.value.length;
+    }
+    motivationField.addEventListener('input', updateCharCount);
+
+    /* ── Form Validation & Submission ────────────────────────────────────── */
+    function clearErrors() {
+      document.querySelectorAll('.form-error').forEach(el => el.classList.remove('show'));
+    }
+
+    function clearFileNames() {
+      document.getElementById('resumeFileName').textContent = '';
+      document.getElementById('coverFileName').textContent = '';
+    }
+
+    function showError(id) {
+      document.getElementById(id).classList.add('show');
+    }
+
+    function isValidEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      clearErrors();
+      let valid = true;
+
+      const name = document.getElementById('fieldName').value.trim();
+      const email = document.getElementById('fieldEmail').value.trim();
+      const phone = document.getElementById('fieldPhone').value.trim();
+      const linkedin = document.getElementById('fieldLinkedin').value.trim();
+      const motivation = document.getElementById('fieldMotivation').value.trim();
+      const consent = document.getElementById('fieldConsent').checked;
+      const resume = document.getElementById('fieldResume').files[0];
+
+      if (!name) { showError('errorName'); valid = false; }
+      if (!email || !isValidEmail(email)) { showError('errorEmail'); valid = false; }
+      if (!resume) { showError('errorResume'); valid = false; }
+      if (!consent) { showError('errorConsent'); valid = false; }
+
+      if (!valid) return;
+
+      // TODO: Replace mailto: with Formspree (https://formspree.io) or backend API
+      // for proper file upload support. Formspree free tier supports file attachments.
+      // Example: POST to https://formspree.io/f/{formId} with FormData
+
+      // Build mailto as primary submission method
+      const subject = encodeURIComponent('Application: ' + currentJob);
+      const body = encodeURIComponent(
+        'Position: ' + currentJob + '\n\n' +
+        'Full Name: ' + name + '\n' +
+        'Email: ' + email + '\n' +
+        (phone ? 'Phone: ' + phone + '\n' : '') +
+        (linkedin ? 'LinkedIn: ' + linkedin + '\n' : '') +
+        (motivation ? '\nMotivation:\n' + motivation + '\n' : '') +
+        '\n---\nPlease attach your resume' + (document.getElementById('fieldCover').files[0] ? ' and cover letter' : '') + ' to this email.'
+      );
+
+      window.location.href = 'mailto:hiring@sikani.tech?subject=' + subject + '&body=' + body;
+
+      // Show success state
+      formState.style.display = 'none';
+      successState.classList.add('active');
+    });
+
+    /* ── GSAP Scroll Animations ──────────────────────────────────────────── */
+    gsap.registerPlugin(ScrollTrigger);
+
+    // Stagger entrance for job cards
+    gsap.utils.toArray('.job-card').forEach((card, i) => {
+      gsap.to(card, {
+        opacity: card.classList.contains('expired') ? 0.6 : 1,
+        y: 0,
+        duration: 0.7,
+        delay: i * 0.15,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: card,
+          start: 'top 85%',
+          once: true,
+          onEnter: () => card.classList.add('visible')
+        }
+      });
+    });
+
+    // Culture cards fade in
+    gsap.utils.toArray('.culture-card').forEach((card, i) => {
+      gsap.from(card, {
+        opacity: 0,
+        y: 30,
+        duration: 0.6,
+        delay: i * 0.12,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: card,
+          start: 'top 90%',
+          once: true
+        }
+      });
+    });
+  </script>
+</body>
+</html>
