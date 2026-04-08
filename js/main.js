@@ -267,18 +267,18 @@ function initAnimations() {
     });
   });
 
-  // Counting animation for stats
+  // Counting animation for stats (hero + about)
   gsap.utils.toArray('[data-count]').forEach((el) => {
     const target = parseInt(el.dataset.count);
     const counter = { val: 0 };
     ScrollTrigger.create({
       trigger: el,
-      start: 'top 80%',
+      start: 'top 85%',
       once: true,
       onEnter: () => {
         gsap.to(counter, {
           val: target,
-          duration: 2,
+          duration: 2.5,
           ease: 'power2.out',
           onUpdate: () => {
             el.textContent = Math.floor(counter.val).toLocaleString();
@@ -355,4 +355,151 @@ function initAnimations() {
     duration: 0.6,
     ease: 'power3.out',
   });
+
+  // ── About section cards ──────────────────────────────────────────────
+  gsap.from('.about-card', {
+    scrollTrigger: {
+      trigger: '.about-cards',
+      start: 'top 80%',
+    },
+    y: 50,
+    opacity: 0,
+    stagger: 0.15,
+    duration: 0.8,
+    ease: 'power3.out',
+  });
+
+  // ── Phone Mockup Scroll Animation ────────────────────────────────────
+  const phoneShowcase = document.querySelector('.phone-showcase');
+  const phoneLeft = document.querySelector('.phone-left');
+  const phoneRight = document.querySelector('.phone-right');
+  const phoneFeaturesText = document.querySelector('.phone-features-text');
+
+  if (phoneShowcase && phoneLeft && phoneRight && window.innerWidth > 900) {
+    // Set initial states
+    gsap.set(phoneFeaturesText, { opacity: 0, y: 30 });
+
+    const phoneTl = gsap.timeline({
+      scrollTrigger: {
+        trigger: phoneShowcase,
+        start: 'top top',
+        end: '+=200%',
+        pin: true,
+        scrub: 1,
+        anticipatePin: 1,
+      },
+    });
+
+    phoneTl
+      // Phase 1: Flatten both phones (rotate to 0)
+      .to(phoneLeft, {
+        rotateY: 0,
+        rotateX: 0,
+        duration: 1,
+        ease: 'power2.inOut',
+      })
+      .to(phoneRight, {
+        rotateY: 0,
+        rotateX: 0,
+        duration: 1,
+        ease: 'power2.inOut',
+      }, '<')
+      // Phase 2: Separate phones left/right
+      .to(phoneLeft, {
+        x: -120,
+        duration: 1,
+        ease: 'power2.inOut',
+      })
+      .to(phoneRight, {
+        x: 120,
+        duration: 1,
+        ease: 'power2.inOut',
+      }, '<')
+      // Phase 3: Reveal center text
+      .to(phoneFeaturesText, {
+        opacity: 1,
+        y: 0,
+        duration: 0.5,
+        ease: 'power3.out',
+      }, '-=0.5');
+  }
+
+  // ── Horizontal Scroll Showcase ───────────────────────────────────────
+  const horizontalSection = document.querySelector('.horizontal-section');
+  const horizontalTrack = document.querySelector('.horizontal-track');
+
+  if (horizontalSection && horizontalTrack) {
+    const cards = gsap.utils.toArray('.horizontal-card');
+
+    // Calculate how far to scroll
+    const getScrollAmount = () => {
+      return -(horizontalTrack.scrollWidth - window.innerWidth + 80);
+    };
+
+    gsap.to(horizontalTrack, {
+      x: getScrollAmount,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: horizontalSection,
+        start: 'top top',
+        end: () => '+=' + (horizontalTrack.scrollWidth - window.innerWidth + 80),
+        pin: true,
+        scrub: 1,
+        anticipatePin: 1,
+        invalidateOnRefresh: true,
+      },
+    });
+
+    // Stagger card entrance
+    cards.forEach((card, i) => {
+      gsap.from(card, {
+        scrollTrigger: {
+          trigger: horizontalSection,
+          start: 'top 80%',
+        },
+        opacity: 0,
+        y: 40,
+        delay: i * 0.1,
+        duration: 0.6,
+        ease: 'power3.out',
+      });
+    });
+  }
+
+  // ── Word-by-Word Text Reveal ─────────────────────────────────────────
+  const revealSection = document.querySelector('.text-reveal-section');
+  const words = document.querySelectorAll('.reveal-word');
+
+  if (revealSection && words.length > 0) {
+    // Pin the section while words animate
+    ScrollTrigger.create({
+      trigger: revealSection,
+      start: 'top top',
+      end: '+=150%',
+      pin: true,
+      anticipatePin: 1,
+    });
+
+    words.forEach((word, i) => {
+      gsap.fromTo(word,
+        {
+          opacity: 0.08,
+          y: 20,
+          filter: 'blur(4px)',
+        },
+        {
+          scrollTrigger: {
+            trigger: revealSection,
+            start: () => 'top+=' + (i * (150 / words.length)) + '% top',
+            end: () => 'top+=' + ((i + 1) * (150 / words.length)) + '% top',
+            scrub: true,
+          },
+          opacity: 1,
+          y: 0,
+          filter: 'blur(0px)',
+          ease: 'power3.out',
+        }
+      );
+    });
+  }
 }
