@@ -225,30 +225,16 @@ function initHeroScene() {
 function initAnimations() {
   initHeroScene();
 
-  // Hero text reveal — character-by-character with SplitType
-  if (typeof SplitType !== 'undefined') {
-    const heroTitle = new SplitType('.hero-title', { types: 'chars, words' });
-    gsap.from(heroTitle.chars, {
-      y: 100,
-      opacity: 0,
-      rotateX: -90,
-      stagger: 0.02,
-      duration: 1,
-      ease: 'back.out(1.7)',
-      delay: 0.3,
-    });
-  } else {
-    // Fallback if SplitType fails to load
-    gsap.from('.hero-line', {
-      y: 80,
-      opacity: 0,
-      rotationX: -15,
-      stagger: 0.12,
-      duration: 1.2,
-      ease: 'power3.out',
-      delay: 0.2,
-    });
-  }
+  // Hero text reveal — line-by-line with smooth entrance
+  // (SplitType char animation breaks gradient-text, so use line-level animation)
+  gsap.from('.hero-line', {
+    y: 60,
+    opacity: 0,
+    stagger: 0.15,
+    duration: 1,
+    ease: 'power3.out',
+    delay: 0.3,
+  });
 
   // Reveal elements on scroll
   gsap.utils.toArray('[data-reveal]').forEach((el) => {
@@ -587,30 +573,14 @@ function initAnimations() {
     }
   }
 
-  // ── Section Clip-Path Reveal + Scale on Scroll ───────────────────────
+  // ── Subtle section entrance (gentle scale only — no clip-path to avoid conflicts) ─
   gsap.utils.toArray('.section').forEach((section) => {
-    // Clip-path inset reveal
-    gsap.fromTo(section,
-      { clipPath: 'inset(15% 5% 15% 5% round 24px)' },
-      {
-        clipPath: 'inset(0% 0% 0% 0% round 0px)',
-        scrollTrigger: {
-          trigger: section,
-          start: 'top bottom',
-          end: 'top 60%',
-          scrub: 1,
-        },
-      }
-    );
-
-    // Container scale-up
     const container = section.querySelector('.container');
     if (container) {
       gsap.fromTo(container,
-        { scale: 0.92, opacity: 0.5 },
+        { scale: 0.97 },
         {
           scale: 1,
-          opacity: 1,
           scrollTrigger: {
             trigger: section,
             start: 'top 80%',

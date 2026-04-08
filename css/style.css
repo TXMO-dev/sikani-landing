@@ -1534,7 +1534,8 @@ button { cursor: none; border: none; background: none; font: inherit; color: inh
 .mascot-wrap {
   display: flex;
   justify-content: center;
-  margin-bottom: -10px;
+  margin-bottom: 24px;
+  margin-top: 16px;
   position: relative;
   z-index: 2;
 }
@@ -2173,7 +2174,7 @@ button { cursor: none; border: none; background: none; font: inherit; color: inh
 
 /* Layered card overlap effect */
 .about, .product, .features, .how-it-works, .security, .register, .download {
-  margin-top: -40px;
+  
   position: relative;
 }
 
@@ -2201,6 +2202,6 @@ button { cursor: none; border: none; background: none; font: inherit; color: inh
   .security-lock-svg { width: 60px; height: 75px; }
   .download-phone-svg { width: 80px; height: 133px; }
   .section::before { height: 60px; }
-  .section + .section { margin-top: -20px; }
+  .section + .section {  }
   .nav-active-dot { display: none; }
 }
