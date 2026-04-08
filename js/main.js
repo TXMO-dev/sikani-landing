@@ -684,6 +684,412 @@ function initAnimations() {
     });
   }
 
+  // ── Reusable Stroke Draw Animation ───────────────────────────────────
+  function animateStrokeDraw(selector, triggerEl, opts = {}) {
+    const elements = document.querySelectorAll(
+      `${selector} path, ${selector} line, ${selector} circle, ${selector} rect`
+    );
+    elements.forEach((el) => {
+      const length = el.getTotalLength ? el.getTotalLength() : 100;
+      gsap.set(el, { strokeDasharray: length, strokeDashoffset: length });
+      gsap.to(el, {
+        strokeDashoffset: 0,
+        duration: opts.duration || 1.5,
+        ease: opts.ease || 'power2.inOut',
+        delay: opts.delay || 0,
+        scrollTrigger: {
+          trigger: triggerEl || el,
+          start: opts.start || 'top 75%',
+          toggleActions: 'play none none none',
+        },
+      });
+    });
+  }
+
+  // ── Hero Shield — Pendulum + Glow + Mouse Proximity Scale ─────────────
+  const heroShield = document.getElementById('heroShield');
+  if (heroShield) {
+    const shieldSvg = heroShield.querySelector('.hero-shield-svg');
+
+    // Draw the shield on page load
+    animateStrokeDraw('.hero-shield-svg', '#hero', { duration: 2, start: 'top 90%' });
+
+    // Pendulum rotation
+    gsap.to(shieldSvg, {
+      rotation: 4,
+      duration: 2.5,
+      ease: 'sine.inOut',
+      repeat: -1,
+      yoyo: true,
+      transformOrigin: 'center top',
+    });
+
+    // Floating bob
+    gsap.to(heroShield, {
+      y: -8,
+      duration: 3,
+      ease: 'sine.inOut',
+      repeat: -1,
+      yoyo: true,
+    });
+
+    // Mouse proximity scale
+    if (window.matchMedia('(hover: hover)').matches) {
+      const heroEl = document.getElementById('hero');
+      if (heroEl) {
+        heroEl.addEventListener('mousemove', (e) => {
+          const rect = heroShield.getBoundingClientRect();
+          const cx = rect.left + rect.width / 2;
+          const cy = rect.top + rect.height / 2;
+          const dist = Math.hypot(e.clientX - cx, e.clientY - cy);
+          const scale = Math.max(1, 1.3 - dist / 400);
+          gsap.to(shieldSvg, { scale, duration: 0.4, ease: 'power2.out' });
+        });
+        heroEl.addEventListener('mouseleave', () => {
+          gsap.to(shieldSvg, { scale: 1, duration: 0.6, ease: 'power2.out' });
+        });
+      }
+    }
+  }
+
+  // ── Feature Animated Icons — Scroll-triggered ──────────────────────────
+  // QR code: stroke draw
+  document.querySelectorAll('.feature-anim-icon[data-anim="qr"]').forEach((icon) => {
+    const els = icon.querySelectorAll('rect');
+    els.forEach((el) => {
+      const len = el.getTotalLength ? el.getTotalLength() : 60;
+      gsap.set(el, { strokeDasharray: len, strokeDashoffset: len });
+      gsap.to(el, {
+        strokeDashoffset: 0,
+        duration: 1.2,
+        ease: 'power2.inOut',
+        scrollTrigger: { trigger: icon.closest('.feature'), start: 'top 75%' },
+      });
+    });
+  });
+
+  // Card/phone flip
+  document.querySelectorAll('.feature-anim-icon[data-anim="card-phone"]').forEach((icon) => {
+    const card = icon.querySelector('.card-side');
+    const phone = icon.querySelector('.phone-side');
+    ScrollTrigger.create({
+      trigger: icon.closest('.feature'),
+      start: 'top 75%',
+      once: true,
+      onEnter: () => {
+        gsap.timeline({ repeat: -1, repeatDelay: 1 })
+          .to(card, { opacity: 0, duration: 0.4, ease: 'power2.inOut' }, '+=2')
+          .to(phone, { opacity: 1, duration: 0.4, ease: 'power2.inOut' }, '<')
+          .to(phone, { opacity: 0, duration: 0.4, ease: 'power2.inOut' }, '+=2')
+          .to(card, { opacity: 1, duration: 0.4, ease: 'power2.inOut' }, '<');
+      },
+    });
+  });
+
+  // Bell wobble
+  document.querySelectorAll('.feature-anim-icon[data-anim="bell"]').forEach((icon) => {
+    ScrollTrigger.create({
+      trigger: icon.closest('.feature'),
+      start: 'top 75%',
+      once: true,
+      onEnter: () => {
+        gsap.fromTo(icon, { rotation: 0 }, {
+          rotation: 14,
+          duration: 0.1,
+          ease: 'power2.inOut',
+          onComplete: () => {
+            gsap.to(icon, {
+              keyframes: [
+                { rotation: -12, duration: 0.1 },
+                { rotation: 10, duration: 0.1 },
+                { rotation: -8, duration: 0.1 },
+                { rotation: 6, duration: 0.1 },
+                { rotation: -4, duration: 0.1 },
+                { rotation: 2, duration: 0.1 },
+                { rotation: 0, duration: 0.15 },
+              ],
+              ease: 'power2.inOut',
+            });
+          },
+        });
+      },
+    });
+  });
+
+  // Clock ticking
+  document.querySelectorAll('.feature-anim-icon[data-anim="clock"]').forEach((icon) => {
+    const minuteHand = icon.querySelector('.clock-hand-m');
+    const hourHand = icon.querySelector('.clock-hand-h');
+    if (minuteHand && hourHand) {
+      ScrollTrigger.create({
+        trigger: icon.closest('.feature'),
+        start: 'top 75%',
+        once: true,
+        onEnter: () => {
+          gsap.to(minuteHand, {
+            rotation: 360,
+            duration: 4,
+            ease: 'none',
+            repeat: -1,
+            transformOrigin: '20px 20px',
+          });
+          gsap.to(hourHand, {
+            rotation: 30,
+            duration: 4,
+            ease: 'none',
+            repeat: -1,
+            transformOrigin: '20px 20px',
+          });
+        },
+      });
+    }
+  });
+
+  // Shield checkmark draw
+  document.querySelectorAll('.feature-anim-icon[data-anim="shield"]').forEach((icon) => {
+    animateStrokeDraw('.feature-anim-icon[data-anim="shield"]', icon.closest('.feature'), {
+      duration: 1.5,
+    });
+  });
+
+  // Chart bars grow
+  document.querySelectorAll('.feature-anim-icon[data-anim="chart"]').forEach((icon) => {
+    const bars = [
+      { el: icon.querySelector('.chart-bar-1'), h: 10 },
+      { el: icon.querySelector('.chart-bar-2'), h: 16 },
+      { el: icon.querySelector('.chart-bar-3'), h: 12 },
+      { el: icon.querySelector('.chart-bar-4'), h: 20 },
+    ];
+    ScrollTrigger.create({
+      trigger: icon.closest('.feature'),
+      start: 'top 75%',
+      once: true,
+      onEnter: () => {
+        bars.forEach(({ el, h }, i) => {
+          if (!el) return;
+          gsap.to(el, {
+            attr: { height: h, y: 28 - h },
+            duration: 0.8,
+            ease: 'back.out(1.5)',
+            delay: i * 0.15,
+          });
+        });
+      },
+    });
+  });
+
+  // ── Step Icons — Scroll-triggered ──────────────────────────────────────
+  // Step 1: QR generating (stroke draw)
+  document.querySelectorAll('.step-anim-icon[data-step="qr-gen"]').forEach((icon) => {
+    const rects = icon.querySelectorAll('rect');
+    rects.forEach((r, i) => {
+      const len = r.getTotalLength ? r.getTotalLength() : 40;
+      gsap.set(r, { strokeDasharray: len, strokeDashoffset: len });
+      gsap.to(r, {
+        strokeDashoffset: 0,
+        duration: 0.6,
+        delay: i * 0.08,
+        ease: 'power2.inOut',
+        scrollTrigger: { trigger: icon.closest('.step'), start: 'top 75%' },
+      });
+    });
+  });
+
+  // Step 2: Scan line sweeping
+  document.querySelectorAll('.step-anim-icon[data-step="scan"]').forEach((icon) => {
+    const scanLine = icon.querySelector('.scan-line');
+    if (scanLine) {
+      ScrollTrigger.create({
+        trigger: icon.closest('.step'),
+        start: 'top 75%',
+        once: true,
+        onEnter: () => {
+          gsap.to(scanLine, {
+            attr: { y1: 24, y2: 24 },
+            duration: 1,
+            ease: 'sine.inOut',
+            repeat: -1,
+            yoyo: true,
+          });
+        },
+      });
+    }
+    // Draw phone outline
+    const els = icon.querySelectorAll('rect, line, circle');
+    els.forEach((el) => {
+      if (el === scanLine) return;
+      const len = el.getTotalLength ? el.getTotalLength() : 80;
+      gsap.set(el, { strokeDasharray: len, strokeDashoffset: len });
+      gsap.to(el, {
+        strokeDashoffset: 0,
+        duration: 1,
+        ease: 'power2.inOut',
+        scrollTrigger: { trigger: icon.closest('.step'), start: 'top 75%' },
+      });
+    });
+  });
+
+  // Step 3: Checkmark completing
+  document.querySelectorAll('.step-anim-icon[data-step="check"]').forEach((icon) => {
+    const els = icon.querySelectorAll('circle, path');
+    els.forEach((el, i) => {
+      const len = el.getTotalLength ? el.getTotalLength() : 100;
+      gsap.set(el, { strokeDasharray: len, strokeDashoffset: len });
+      gsap.to(el, {
+        strokeDashoffset: 0,
+        duration: 1,
+        delay: i * 0.4,
+        ease: 'power2.inOut',
+        scrollTrigger: { trigger: icon.closest('.step'), start: 'top 75%' },
+      });
+    });
+  });
+
+  // ── Security Padlock — Scroll-triggered Draw ───────────────────────────
+  const securityLock = document.getElementById('securityLock');
+  if (securityLock) {
+    const shackle = securityLock.querySelector('.lock-shackle');
+    const body = securityLock.querySelector('.lock-body-rect');
+    const glowCircle = securityLock.querySelector('.lock-glow-circle');
+
+    [shackle, body].forEach((el) => {
+      if (!el) return;
+      const len = el.getTotalLength ? el.getTotalLength() : 200;
+      gsap.set(el, { strokeDasharray: len, strokeDashoffset: len });
+    });
+
+    ScrollTrigger.create({
+      trigger: '#security',
+      start: 'top 70%',
+      once: true,
+      onEnter: () => {
+        // Draw body first
+        if (body) {
+          const bLen = body.getTotalLength ? body.getTotalLength() : 200;
+          gsap.to(body, { strokeDashoffset: 0, duration: 1.2, ease: 'power2.inOut' });
+        }
+        // Then shackle closes
+        if (shackle) {
+          const sLen = shackle.getTotalLength ? shackle.getTotalLength() : 200;
+          gsap.to(shackle, { strokeDashoffset: 0, duration: 1, delay: 0.6, ease: 'power2.inOut' });
+        }
+        // Glow pulses
+        if (glowCircle) {
+          gsap.to(glowCircle, { opacity: 0.3, duration: 1, delay: 1.2, ease: 'power2.out' });
+        }
+      },
+    });
+  }
+
+  // ── Download Phone — Scroll-triggered Draw + Fill ──────────────────────
+  const downloadPhone = document.getElementById('downloadPhone');
+  if (downloadPhone) {
+    const phoneBody = downloadPhone.querySelector('.dl-phone-body');
+    const phoneScreen = downloadPhone.querySelector('.dl-phone-screen');
+    const appIcon = downloadPhone.querySelector('.dl-app-icon');
+    const sparkles = downloadPhone.querySelectorAll('.sparkle');
+    const screenGradStops = downloadPhone.querySelectorAll('#screenGrad stop');
+
+    // Set initial stroke-dash states
+    [phoneBody].forEach((el) => {
+      if (!el) return;
+      const len = el.getTotalLength ? el.getTotalLength() : 600;
+      gsap.set(el, { strokeDasharray: len, strokeDashoffset: len });
+    });
+
+    ScrollTrigger.create({
+      trigger: '#download',
+      start: 'top 70%',
+      once: true,
+      onEnter: () => {
+        // Phase 1: Draw phone outline
+        if (phoneBody) {
+          gsap.to(phoneBody, { strokeDashoffset: 0, duration: 1.5, ease: 'power2.inOut' });
+        }
+        // Phase 2: Fill screen with gold gradient
+        if (screenGradStops.length >= 2) {
+          gsap.to(screenGradStops[0], { attr: { 'stop-opacity': 0.08 }, duration: 0.8, delay: 1.2 });
+          gsap.to(screenGradStops[1], { attr: { 'stop-opacity': 0.15 }, duration: 0.8, delay: 1.2 });
+        }
+        // Phase 3: App icon appears
+        if (appIcon) {
+          gsap.to(appIcon, { opacity: 1, duration: 0.6, delay: 1.8, ease: 'back.out(1.7)' });
+        }
+        // Phase 4: Sparkles
+        sparkles.forEach((s, i) => {
+          gsap.to(s, {
+            opacity: 0.8,
+            duration: 0.4,
+            delay: 2.2 + i * 0.15,
+            ease: 'power2.out',
+            onComplete: () => {
+              gsap.to(s, {
+                y: -8,
+                scale: 1.3,
+                duration: 1.5,
+                ease: 'sine.inOut',
+                repeat: -1,
+                yoyo: true,
+                delay: i * 0.3,
+              });
+            },
+          });
+        });
+      },
+    });
+  }
+
+  // ── Navigation Active Section Indicator ────────────────────────────────
+  const navDot = document.getElementById('navActiveDot');
+  const navLinks = document.querySelectorAll('.nav-link[data-section]');
+  if (navDot && navLinks.length > 0) {
+    const sections = ['about', 'product', 'features', 'how-it-works', 'security'];
+
+    function updateNavDot(activeId) {
+      let activeLink = null;
+      navLinks.forEach((link) => {
+        if (link.dataset.section === activeId) {
+          link.classList.add('active');
+          activeLink = link;
+        } else {
+          link.classList.remove('active');
+        }
+      });
+      if (activeLink) {
+        const linkRect = activeLink.getBoundingClientRect();
+        const parentRect = activeLink.parentElement.getBoundingClientRect();
+        const left = linkRect.left - parentRect.left + linkRect.width / 2 - 2.5;
+        gsap.to(navDot, { left, duration: 0.4, ease: 'power2.out' });
+        navDot.classList.add('visible');
+      } else {
+        navDot.classList.remove('visible');
+      }
+    }
+
+    sections.forEach((id) => {
+      const section = document.getElementById(id);
+      if (!section) return;
+      ScrollTrigger.create({
+        trigger: section,
+        start: 'top 40%',
+        end: 'bottom 40%',
+        onEnter: () => updateNavDot(id),
+        onEnterBack: () => updateNavDot(id),
+        onLeave: () => {},
+        onLeaveBack: () => {},
+      });
+    });
+
+    // Clear dot when at very top
+    ScrollTrigger.create({
+      trigger: '#hero',
+      start: 'top top',
+      end: 'bottom 40%',
+      onEnter: () => navDot.classList.remove('visible'),
+      onEnterBack: () => navDot.classList.remove('visible'),
+    });
+  }
+
   // ── Registration Form GSAP Animations ──────────────────────────────
   const regCard = document.querySelector('.reg-card');
   if (regCard) {
