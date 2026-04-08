@@ -29,6 +29,49 @@ if (lenis) {
   gsap.ticker.lagSmoothing(0);
 }
 
+// ── Back to Top Button ────────────────────────────────────────────────────
+const backToTop = document.getElementById('backToTop');
+const bttProgress = document.querySelector('.btt-progress');
+const bttCircumference = 2 * Math.PI * 22; // r=22
+
+if (backToTop && bttProgress) {
+  // Show/hide + fill progress ring based on scroll
+  window.addEventListener('scroll', () => {
+    const scrollTop = window.scrollY || document.documentElement.scrollTop;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const scrollPercent = Math.min(scrollTop / docHeight, 1);
+
+    // Show after scrolling 300px
+    if (scrollTop > 300) {
+      backToTop.classList.add('visible');
+    } else {
+      backToTop.classList.remove('visible');
+    }
+
+    // Update progress ring
+    const offset = bttCircumference * (1 - scrollPercent);
+    bttProgress.style.strokeDashoffset = offset;
+  });
+
+  // Click — smooth scroll to top
+  backToTop.addEventListener('click', () => {
+    if (lenis) {
+      lenis.scrollTo(0, { duration: 1.5 });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Arrow bounce animation on click
+    gsap.to('.btt-arrow', {
+      y: -8,
+      duration: 0.2,
+      ease: 'power2.out',
+      yoyo: true,
+      repeat: 1,
+    });
+  });
+}
+
 // ── Loader ────────────────────────────────────────────────────────────────
 const loader = document.getElementById('loader');
 const loaderProgress = document.querySelector('.loader-progress');
