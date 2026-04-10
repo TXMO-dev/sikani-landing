@@ -53,12 +53,23 @@ if (backToTop && bttProgress) {
     bttProgress.style.strokeDashoffset = offset;
   });
 
-  // Click — smooth scroll to top
+  // Click — smooth scroll to top, duration scales with distance
   backToTop.addEventListener('click', () => {
+    const scrollTop = window.scrollY || document.documentElement.scrollTop;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const scrollPct = docHeight > 0 ? scrollTop / docHeight : 0;
+    // 1.5s minimum, up to 4s from very bottom — smooth cinematic reverse
+    const duration = 1.5 + scrollPct * 2.5;
+
     if (lenis) {
-      lenis.scrollTo(0, { duration: 1.5 });
+      lenis.scrollTo(0, { duration, easing: (t) => 1 - Math.pow(1 - t, 4) });
     } else {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // For mobile without Lenis — use GSAP for smooth animated scroll
+      gsap.to(window, {
+        scrollTo: { y: 0, autoKill: false },
+        duration: duration,
+        ease: 'power3.inOut',
+      });
     }
 
     // Arrow bounce animation on click
@@ -109,7 +120,7 @@ const cursorTrail = document.getElementById('cursor-trail');
 let mouseX = 0, mouseY = 0;
 let trailX = 0, trailY = 0;
 
-if (window.matchMedia('(hover: hover)').matches) {
+if (cursor && cursorTrail && window.matchMedia('(hover: hover)').matches) {
   document.addEventListener('mousemove', (e) => {
     mouseX = e.clientX;
     mouseY = e.clientY;
@@ -125,10 +136,16 @@ if (window.matchMedia('(hover: hover)').matches) {
   }
   animateTrail();
 
-  // Hover states
-  document.querySelectorAll('a, button, [data-magnetic]').forEach((el) => {
-    el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
-    el.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
+  // Hover states — use event delegation so it works on dynamic elements (modals, etc.)
+  document.addEventListener('mouseover', (e) => {
+    if (e.target.closest('a, button, [data-magnetic], input, textarea, select, .text-link, .legal-modal-close, .store-btn')) {
+      cursor.classList.add('hover');
+    }
+  });
+  document.addEventListener('mouseout', (e) => {
+    if (e.target.closest('a, button, [data-magnetic], input, textarea, select, .text-link, .legal-modal-close, .store-btn')) {
+      cursor.classList.remove('hover');
+    }
   });
 }
 
@@ -174,7 +191,16 @@ document.querySelectorAll('.mobile-link').forEach((link) => {
 document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
   anchor.addEventListener('click', (e) => {
     e.preventDefault();
-    const target = document.querySelector(anchor.getAttribute('href'));
+    const href = anchor.getAttribute('href');
+    // Logo click → scroll to very top
+    if (href === '#hero') {
+      const scrollPct = (window.scrollY || 0) / (document.documentElement.scrollHeight - window.innerHeight || 1);
+      const dur = 1.5 + scrollPct * 2.5;
+      if (lenis) lenis.scrollTo(0, { duration: dur, easing: (t) => 1 - Math.pow(1 - t, 4) });
+      else gsap.to(window, { scrollTo: { y: 0, autoKill: false }, duration: dur, ease: 'power3.inOut' });
+      return;
+    }
+    const target = document.querySelector(href);
     if (target) {
       if (lenis) lenis.scrollTo(target, { offset: -80 });
       else target.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -534,19 +560,17 @@ function initAnimations() {
   const words = document.querySelectorAll('.reveal-word');
 
   if (revealSection && words.length > 0) {
-    // Use a single timeline pinned to the section for reliable word-by-word reveal
     const revealTl = gsap.timeline({
       scrollTrigger: {
         trigger: revealSection,
         start: 'top top',
-        end: '+=200%',
+        end: isMobile ? '+=300%' : '+=200%',
         pin: true,
-        scrub: 0.5,
+        scrub: isMobile ? 1 : 0.5,
         anticipatePin: 1,
       },
     });
 
-    // Set initial state
     gsap.set(words, { opacity: 0.08, y: 30, filter: 'blur(6px)', scale: 0.95 });
 
     words.forEach((word, i) => {
@@ -557,12 +581,10 @@ function initAnimations() {
         scale: 1,
         duration: 1,
         ease: 'power2.out',
-      }, i * 0.6); // stagger each word
+      }, i * (isMobile ? 1 : 0.6));
     });
 
-    // Hold the fully revealed text for a beat
-    revealTl.to({}, { duration: 2 });
-
+    revealTl.to({}, { duration: isMobile ? 4 : 2 });
   }
 
   // ── Scroll Progress Indicator ────────────────────────────────────────
@@ -653,52 +675,41 @@ function initAnimations() {
     }
   });
 
-  // ── Floating Badges — Bobbing + Parallax ─────────────────────────────
+  // ── Floating Badges — Smooth scrub parallax (no competing animations) ─
   const badges = document.querySelectorAll('.floating-badge');
   if (badges.length > 0) {
+    // Entrance — once, clean
     badges.forEach((badge, i) => {
-      // Staggered entrance
       gsap.from(badge, {
         opacity: 0,
         scale: 0.7,
-        y: 30,
         duration: 0.8,
         delay: 0.2 + i * 0.15,
         ease: 'back.out(1.7)',
         scrollTrigger: {
           trigger: '.phone-showcase',
-          start: 'top 70%',
+          start: 'top 75%',
+          once: true,
         },
       });
+    });
 
-      // Continuous bobbing with offset
-      gsap.to(badge, {
-        y: '-=12',
-        duration: 2 + i * 0.3,
-        ease: 'sine.inOut',
-        repeat: -1,
-        yoyo: true,
-        delay: i * 0.5,
+    // Single scrub-driven parallax per badge — different speeds for depth
+    if (!isMobile) {
+      const speeds = [-30, -50, -20, -40];
+      badges.forEach((badge, i) => {
+        gsap.to(badge, {
+          y: speeds[i] || -30,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: '.phone-showcase',
+            start: 'top bottom',
+            end: 'bottom top',
+            scrub: 2, // higher = smoother, less reactive
+          },
+        });
       });
-    });
-
-    // Parallax on scroll
-    gsap.to('.badge-1', {
-      y: -40,
-      scrollTrigger: { trigger: '.phone-showcase', start: 'top bottom', end: 'bottom top', scrub: 1 },
-    });
-    gsap.to('.badge-2', {
-      y: -60,
-      scrollTrigger: { trigger: '.phone-showcase', start: 'top bottom', end: 'bottom top', scrub: 1 },
-    });
-    gsap.to('.badge-3', {
-      y: -30,
-      scrollTrigger: { trigger: '.phone-showcase', start: 'top bottom', end: 'bottom top', scrub: 1 },
-    });
-    gsap.to('.badge-4', {
-      y: -50,
-      scrollTrigger: { trigger: '.phone-showcase', start: 'top bottom', end: 'bottom top', scrub: 1 },
-    });
+    }
   }
 
   // ── Footer Curtain Reveal ────────────────────────────────────────────
@@ -1397,6 +1408,153 @@ if (mascotWrap) {
   });
 }
 
+// ── Multi-step form wizard ───────────────────────────────────────────────
+(function initRegWizard() {
+  let currentStep = 1;
+  const totalSteps = 4;
+  const indicators = document.querySelectorAll('.reg-step-indicator');
+  const lines = document.querySelectorAll('.reg-step-line-fill');
+  const panels = document.querySelectorAll('.reg-step-panel');
+
+  if (!indicators.length || !panels.length) return;
+
+  function goToStep(step) {
+    if (step < 1 || step > totalSteps) return;
+
+    // Animate out current panel
+    const currentPanel = document.querySelector(`.reg-step-panel[data-panel="${currentStep}"]`);
+    const nextPanel = document.querySelector(`.reg-step-panel[data-panel="${step}"]`);
+    if (!currentPanel || !nextPanel) return;
+
+    const dir = step > currentStep ? 1 : -1;
+
+    // Slide out
+    gsap.to(currentPanel, {
+      x: -40 * dir,
+      opacity: 0,
+      duration: 0.25,
+      ease: 'power2.in',
+      onComplete: () => {
+        currentPanel.classList.remove('active');
+        nextPanel.classList.add('active');
+
+        // Slide in
+        gsap.fromTo(nextPanel, {
+          x: 40 * dir,
+          opacity: 0,
+        }, {
+          x: 0,
+          opacity: 1,
+          duration: 0.35,
+          ease: 'power3.out',
+        });
+      },
+    });
+
+    // Update indicators
+    indicators.forEach((ind) => {
+      const s = parseInt(ind.dataset.step);
+      ind.classList.remove('active', 'done');
+      if (s === step) ind.classList.add('active');
+      else if (s < step) ind.classList.add('done');
+    });
+
+    // Update progress lines
+    lines.forEach((line, i) => {
+      const lineStep = i + 1; // line after step i+1
+      if (lineStep < step) {
+        gsap.to(line, { width: '100%', duration: 0.4, ease: 'power2.out' });
+      } else {
+        gsap.to(line, { width: '0%', duration: 0.3, ease: 'power2.in' });
+      }
+    });
+
+    currentStep = step;
+
+    // Build summary on step 4
+    if (step === 4) buildSummary();
+  }
+
+  // Next buttons
+  document.querySelectorAll('.reg-next').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const next = parseInt(btn.dataset.next);
+      goToStep(next);
+    });
+  });
+
+  // Prev buttons
+  document.querySelectorAll('.reg-prev').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const prev = parseInt(btn.dataset.prev);
+      goToStep(prev);
+    });
+  });
+
+  // Settlement method toggle
+  const settlementSelect = document.getElementById('regSettlementMethod');
+  const bankFields = document.getElementById('bankFields');
+  const momoFields = document.getElementById('momoFields');
+  if (settlementSelect) {
+    settlementSelect.addEventListener('change', () => {
+      const val = settlementSelect.value;
+      if (bankFields) bankFields.style.display = val === 'bank' ? 'block' : 'none';
+      if (momoFields) momoFields.style.display = val === 'momo' ? 'block' : 'none';
+
+      // Animate fields in
+      const target = val === 'bank' ? bankFields : momoFields;
+      if (target) {
+        gsap.from(target.children, {
+          y: 15,
+          opacity: 0,
+          duration: 0.4,
+          ease: 'power2.out',
+          stagger: 0.08,
+        });
+      }
+    });
+  }
+
+  // Build summary
+  function buildSummary() {
+    const summary = document.getElementById('regSummary');
+    if (!summary) return;
+
+    const val = (id) => {
+      const el = document.getElementById(id);
+      return el ? el.value.trim() : '';
+    };
+    const selText = (id) => {
+      const el = document.getElementById(id);
+      return el && el.selectedIndex > 0 ? el.options[el.selectedIndex].text : '—';
+    };
+
+    const rows = [
+      { label: 'Name', value: `${val('regFirstName')} ${val('regLastName')}` },
+      { label: 'Email', value: val('regEmail') },
+      { label: 'Phone', value: val('regPhone') },
+      { label: 'Business', value: val('regBusiness') || '—' },
+      { label: 'Type', value: selText('regBusinessType') },
+      { label: 'Tax ID', value: val('regTIN') || '—' },
+      { label: 'Country', value: selText('regCountry') },
+      { label: 'Settlement', value: selText('regSettlementMethod') },
+    ];
+
+    summary.innerHTML = rows.map((r) =>
+      `<div class="reg-summary-row"><span class="reg-summary-label">${r.label}</span><span class="reg-summary-value">${r.value}</span></div>`
+    ).join('');
+
+    // Animate rows in
+    gsap.from(summary.children, {
+      y: 10,
+      opacity: 0,
+      duration: 0.3,
+      ease: 'power2.out',
+      stagger: 0.05,
+    });
+  }
+})();
+
 // ── Form submit handler ──────────────────────────────────────────────────
 const sellerRegForm = document.getElementById('sellerRegForm');
 if (sellerRegForm) {
@@ -1405,14 +1563,25 @@ if (sellerRegForm) {
   sellerRegForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
+    const val = (id) => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
     const data = {
-      firstName: document.getElementById('regFirstName').value,
-      lastName: document.getElementById('regLastName').value,
-      email: document.getElementById('regEmail').value,
-      phoneNumber: document.getElementById('regPhone').value,
-      businessName: document.getElementById('regBusiness').value,
-      password: document.getElementById('regPassword').value,
-      confirmPassword: document.getElementById('regConfirmPassword').value,
+      firstName: val('regFirstName'),
+      lastName: val('regLastName'),
+      email: val('regEmail'),
+      phoneNumber: val('regPhone'),
+      businessName: val('regBusiness'),
+      businessRegNumber: val('regBusinessReg'),
+      tin: val('regTIN'),
+      businessType: val('regBusinessType'),
+      businessAddress: val('regBusinessAddress'),
+      settlementMethod: val('regSettlementMethod'),
+      bankName: val('regBankName'),
+      bankBranch: val('regBankBranch'),
+      accountNumber: val('regAccountNumber'),
+      momoProvider: val('regMomoProvider'),
+      momoNumber: val('regMomoNumber'),
+      password: val('regPassword'),
+      confirmPassword: val('regConfirmPassword'),
       terms: document.getElementById('regTerms').checked,
     };
 
@@ -1468,12 +1637,29 @@ if (sellerRegForm) {
       gsap.from('.reg-modal-content', { scale: 0.9, opacity: 0, duration: 0.4, ease: 'back.out(1.7)' });
       sellerRegForm.reset();
       // Reset field styles
-      sellerRegForm.querySelectorAll('input').forEach((inp) => {
+      sellerRegForm.querySelectorAll('input, select').forEach((inp) => {
         inp.classList.remove('valid', 'invalid');
       });
       sellerRegForm.querySelectorAll('.field-error').forEach((el) => {
         el.textContent = '';
       });
+      // Reset wizard to step 1
+      document.querySelectorAll('.reg-step-panel').forEach((p) => p.classList.remove('active'));
+      const step1 = document.querySelector('.reg-step-panel[data-panel="1"]');
+      if (step1) { step1.classList.add('active'); gsap.set(step1, { x: 0, opacity: 1 }); }
+      document.querySelectorAll('.reg-step-indicator').forEach((ind) => {
+        ind.classList.remove('active', 'done');
+        if (ind.dataset.step === '1') ind.classList.add('active');
+      });
+      document.querySelectorAll('.reg-step-line-fill').forEach((l) => { l.style.width = '0%'; });
+      // Hide conditional fields
+      const bankF = document.getElementById('bankFields');
+      const momoF = document.getElementById('momoFields');
+      if (bankF) bankF.style.display = 'none';
+      if (momoF) momoF.style.display = 'none';
+      // Clear summary
+      const summary = document.getElementById('regSummary');
+      if (summary) summary.innerHTML = '';
     } catch (err) {
       // Show error + fallback
       fallbackEl.style.display = '';
@@ -1511,3 +1697,2073 @@ if (sellerRegForm) {
   if (modalClose) modalClose.addEventListener('click', closeModal);
   if (modalOverlay) modalOverlay.addEventListener('click', closeModal);
 }
+
+// ══════════════════════════════════════════════════════════════════════════
+// HERO — Dynamic Pexels background photo with Ken Burns
+// ══════════════════════════════════════════════════════════════════════════
+(function initHeroPhoto() {
+  const img = document.getElementById('heroPhotoImg');
+  if (!img) return;
+
+  // Pool of high-quality African fintech / payments / business hero images
+  const HERO_POOL = [
+    'https://images.pexels.com/photos/6694482/pexels-photo-6694482.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=2',
+    'https://images.pexels.com/photos/7567236/pexels-photo-7567236.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=2',
+    'https://images.pexels.com/photos/7567535/pexels-photo-7567535.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=2',
+    'https://images.pexels.com/photos/7567606/pexels-photo-7567606.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=2',
+    'https://images.pexels.com/photos/5647280/pexels-photo-5647280.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=2',
+    'https://images.pexels.com/photos/4559704/pexels-photo-4559704.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=2',
+    'https://images.pexels.com/photos/7679884/pexels-photo-7679884.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=2',
+  ];
+
+  const src = HERO_POOL[Math.floor(Math.random() * HERO_POOL.length)];
+  img.src = src;
+  img.onload = () => img.classList.add('loaded');
+  // Fallback — if image fails, hero stays with canvas-only bg
+  img.onerror = () => { img.style.display = 'none'; };
+})();
+
+// ══════════════════════════════════════════════════════════════════════════
+// SHOWCASE — Awwwards-tier animations
+// ══════════════════════════════════════════════════════════════════════════
+(function initShowcase() {
+  const section = document.getElementById('showcase');
+  const grid = document.getElementById('showcaseGrid');
+  const items = gsap.utils.toArray('.showcase-item');
+  if (!section || !items.length) return;
+
+  // ── 1. Gold particle canvas (desktop only) ──────────────────────────────
+  if (!isMobile && !prefersReducedMotion) {
+    const canvas = document.getElementById('showcaseParticles');
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      let cW, cH, particles = [];
+      const PARTICLE_COUNT = 60;
+
+      function resizeCanvas() {
+        const rect = section.getBoundingClientRect();
+        cW = canvas.width = rect.width;
+        cH = canvas.height = rect.height;
+      }
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+
+      // Seed particles
+      for (let i = 0; i < PARTICLE_COUNT; i++) {
+        particles.push({
+          x: Math.random() * cW,
+          y: Math.random() * cH,
+          vx: (Math.random() - 0.5) * 0.3,
+          vy: -0.15 - Math.random() * 0.35,
+          r: 0.8 + Math.random() * 1.8,
+          alpha: 0.15 + Math.random() * 0.35,
+          phase: Math.random() * Math.PI * 2,
+          speed: 0.3 + Math.random() * 0.6,
+        });
+      }
+
+      let particleRAF;
+      let isVisible = false;
+
+      function drawParticles(time) {
+        if (!isVisible) return;
+        ctx.clearRect(0, 0, cW, cH);
+        for (const p of particles) {
+          p.x += p.vx;
+          p.y += p.vy;
+          const breathe = 0.6 + 0.4 * Math.sin(time * 0.001 * p.speed + p.phase);
+
+          // Wrap around
+          if (p.y < -10) { p.y = cH + 10; p.x = Math.random() * cW; }
+          if (p.x < -10) p.x = cW + 10;
+          if (p.x > cW + 10) p.x = -10;
+
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(212,175,55,${p.alpha * breathe})`;
+          ctx.fill();
+        }
+        particleRAF = requestAnimationFrame(drawParticles);
+      }
+
+      // Only animate when section is in view
+      ScrollTrigger.create({
+        trigger: section,
+        start: 'top bottom',
+        end: 'bottom top',
+        onEnter: () => { isVisible = true; particleRAF = requestAnimationFrame(drawParticles); },
+        onLeave: () => { isVisible = false; cancelAnimationFrame(particleRAF); },
+        onEnterBack: () => { isVisible = true; particleRAF = requestAnimationFrame(drawParticles); },
+        onLeaveBack: () => { isVisible = false; cancelAnimationFrame(particleRAF); },
+      });
+    }
+  }
+
+  // ── 2. Ambient orb float (desktop only) ─────────────────────────────────
+  if (!isMobile && !prefersReducedMotion) {
+    const orbs = gsap.utils.toArray('.showcase-orb');
+    orbs.forEach((orb, i) => {
+      gsap.set(orb, { opacity: 0 });
+      ScrollTrigger.create({
+        trigger: section,
+        start: 'top 80%',
+        once: true,
+        onEnter: () => {
+          gsap.to(orb, { opacity: 1, duration: 2, delay: i * 0.4, ease: 'power2.out' });
+          gsap.to(orb, {
+            y: `random(-40, 40)`,
+            x: `random(-30, 30)`,
+            duration: 6 + i * 2,
+            repeat: -1,
+            yoyo: true,
+            ease: 'sine.inOut',
+          });
+        },
+      });
+    });
+  }
+
+  // ── 3. Clip-path staggered reveal with scale choreography ───────────────
+  const revealTL = gsap.timeline({
+    scrollTrigger: {
+      trigger: grid,
+      start: 'top 82%',
+      once: true,
+    },
+    onComplete: () => {
+      // After reveal completes, mark all items for continuous CSS drift
+      items.forEach((item) => item.classList.add('revealed'));
+      // Start the repeating shimmer loop
+      startShimmerLoop();
+    },
+  });
+
+  items.forEach((item, i) => {
+    const img = item.querySelector('img');
+    const fromDir = i % 2 === 0 ? 'inset(100% 0 0 0)' : 'inset(0 0 100% 0)';
+    gsap.set(item, { clipPath: fromDir, opacity: 1 });
+    if (img) gsap.set(img, { scale: 1.3 });
+
+    revealTL.to(item, {
+      clipPath: 'inset(0% 0 0% 0)',
+      duration: 1.2,
+      ease: 'power4.inOut',
+    }, i * 0.12);
+
+    if (img) {
+      revealTL.to(img, {
+        scale: 1.15,
+        duration: 1.6,
+        ease: 'power2.out',
+      }, i * 0.12);
+    }
+  });
+
+  // ── 4. Continuous shimmer sweep — subtle gold light passes over items ───
+  function startShimmerLoop() {
+    if (prefersReducedMotion) return;
+    let shimmerIdx = 0;
+    function triggerShimmer() {
+      const item = items[shimmerIdx % items.length];
+      item.classList.remove('shimmer-active');
+      void item.offsetWidth; // reflow to restart animation
+      item.classList.add('shimmer-active');
+      // Remove class after animation completes
+      setTimeout(() => item.classList.remove('shimmer-active'), 2200);
+      shimmerIdx++;
+      // Schedule next shimmer — staggered 3-5s apart
+      setTimeout(triggerShimmer, 3000 + Math.random() * 2000);
+    }
+    // Start first shimmer after a short delay
+    setTimeout(triggerShimmer, 2000);
+  }
+
+  // ── 5. Scroll-driven parallax per item (desktop) ────────────────────────
+  if (!isMobile && !prefersReducedMotion) {
+    items.forEach((item, i) => {
+      const img = item.querySelector('img');
+      if (!img) return;
+      const direction = i % 3 === 0 ? -15 : i % 3 === 1 ? -8 : -12;
+      gsap.to(img, {
+        yPercent: direction,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: item,
+          start: 'top bottom',
+          end: 'bottom top',
+          scrub: 1.2,
+        },
+      });
+    });
+  }
+
+  // ── 6. 3D tilt on hover (desktop) ──────────────────────────────────────
+  if (!isMobile && !prefersReducedMotion) {
+    items.forEach((item) => {
+      let bounds;
+      const handleEnter = () => {
+        bounds = item.getBoundingClientRect();
+        item.classList.add('is-active');
+      };
+      const handleLeave = () => {
+        item.classList.remove('is-active');
+        gsap.to(item, { rotateX: 0, rotateY: 0, duration: 0.6, ease: 'power2.out' });
+      };
+      const handleMove = (e) => {
+        if (!bounds) return;
+        const x = e.clientX - bounds.left;
+        const y = e.clientY - bounds.top;
+        const rotateY = ((x / bounds.width) - 0.5) * 12;
+        const rotateX = ((y / bounds.height) - 0.5) * -10;
+        gsap.to(item, { rotateX, rotateY, duration: 0.4, ease: 'power2.out', overwrite: 'auto' });
+      };
+      item.addEventListener('mouseenter', handleEnter);
+      item.addEventListener('mouseleave', handleLeave);
+      item.addEventListener('mousemove', handleMove);
+    });
+  }
+
+  // ── 7. Text scramble on hover ──────────────────────────────────────────
+  const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%';
+  function scrambleText(el) {
+    const original = el.dataset.original || (el.dataset.original = el.textContent);
+    const len = original.length;
+    let iteration = 0;
+    const maxIterations = len;
+    clearInterval(el._scrambleInterval);
+    el._scrambleInterval = setInterval(() => {
+      el.textContent = original
+        .split('')
+        .map((char, i) => {
+          if (i < iteration) return original[i];
+          if (char === ' ') return ' ';
+          return CHARS[Math.floor(Math.random() * CHARS.length)];
+        })
+        .join('');
+      iteration += 1 / 2;
+      if (iteration >= maxIterations) {
+        el.textContent = original;
+        clearInterval(el._scrambleInterval);
+      }
+    }, 30);
+  }
+
+  if (!isMobile) {
+    items.forEach((item) => {
+      const caption = item.querySelector('[data-scramble]');
+      if (caption) {
+        item.addEventListener('mouseenter', () => scrambleText(caption));
+      }
+    });
+  }
+
+  // ── 8. CTA reveal ──────────────────────────────────────────────────────
+  const cta = document.querySelector('.showcase-cta');
+  if (cta) {
+    gsap.set(cta, { opacity: 0, y: 40 });
+    ScrollTrigger.create({
+      trigger: cta,
+      start: 'top 92%',
+      once: true,
+      onEnter: () => {
+        gsap.to(cta, {
+          opacity: 1,
+          y: 0,
+          duration: 1,
+          ease: 'power3.out',
+          delay: 0.3,
+        });
+      },
+    });
+  }
+
+  // ── 9. Whole-grid subtle sway on scroll (desktop) ──────────────────────
+  if (!isMobile && !prefersReducedMotion) {
+    gsap.to(grid, {
+      rotateX: 2,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: section,
+        start: 'top bottom',
+        end: 'bottom top',
+        scrub: 2,
+      },
+    });
+  }
+
+  // ── 10. Floating gold dots around the grid (desktop) ───────────────────
+  if (!isMobile && !prefersReducedMotion) {
+    const DOT_COUNT = 8;
+    for (let i = 0; i < DOT_COUNT; i++) {
+      const dot = document.createElement('div');
+      dot.className = 'showcase-float-dot';
+      const size = 3 + Math.random() * 4;
+      dot.style.width = size + 'px';
+      dot.style.height = size + 'px';
+      dot.style.background = `rgba(212,175,55,${0.15 + Math.random() * 0.2})`;
+      dot.style.left = (5 + Math.random() * 90) + '%';
+      dot.style.top = (5 + Math.random() * 90) + '%';
+      grid.appendChild(dot);
+
+      // Continuous floating animation
+      gsap.set(dot, { opacity: 0 });
+      gsap.to(dot, {
+        opacity: 1,
+        duration: 1.5,
+        delay: 1 + i * 0.3,
+        scrollTrigger: { trigger: grid, start: 'top 80%', once: true },
+      });
+
+      gsap.to(dot, {
+        y: `random(-50, 50)`,
+        x: `random(-40, 40)`,
+        duration: 5 + Math.random() * 4,
+        repeat: -1,
+        yoyo: true,
+        ease: 'sine.inOut',
+        delay: Math.random() * 3,
+      });
+
+      // Subtle pulse
+      gsap.to(dot, {
+        scale: 0.4 + Math.random() * 0.4,
+        opacity: 0.1,
+        duration: 2 + Math.random() * 2,
+        repeat: -1,
+        yoyo: true,
+        ease: 'sine.inOut',
+        delay: Math.random() * 2,
+      });
+    }
+  }
+})();
+
+// ══════════════════════════════════════════════════════════════════════════
+// LEGAL MODAL — Inline Terms / Privacy viewer with animations
+// ══════════════════════════════════════════════════════════════════════════
+(function initLegalModal() {
+  const modal = document.getElementById('legalModal');
+  const overlay = modal?.querySelector('.legal-modal-overlay');
+  const container = modal?.querySelector('.legal-modal-container');
+  const closeBtn = document.getElementById('legalModalClose');
+  const acceptBtn = document.getElementById('legalModalAccept');
+  const titleEl = document.getElementById('legalModalTitle');
+  const bodyEl = document.getElementById('legalModalBody');
+  const contentEl = document.getElementById('legalModalContent');
+  const progressBar = document.getElementById('legalModalProgress');
+  if (!modal || !contentEl) return;
+
+  // Cache fetched HTML
+  const cache = {};
+
+  // Expose globally for inline onclick
+  window.openLegalModal = async function (type) {
+    const isTerms = type === 'terms';
+    titleEl.textContent = isTerms ? 'Terms of Service' : 'Privacy Policy';
+    const url = isTerms ? 'terms.html' : 'privacy.html';
+
+    // Show modal immediately with loading state
+    modal.style.display = 'flex';
+    contentEl.innerHTML = '<p style="color:rgba(255,255,255,0.3);text-align:center;padding:40px 0;">Loading...</p>';
+    progressBar.style.width = '0%';
+    bodyEl.scrollTop = 0;
+
+    // Lock body scroll
+    document.body.style.overflow = 'hidden';
+
+    // Animate in
+    gsap.fromTo(overlay, { opacity: 0 }, { opacity: 1, duration: 0.4, ease: 'power2.out' });
+    gsap.fromTo(container, {
+      opacity: 0,
+      scale: 0.92,
+      y: 40,
+      rotateX: 6,
+    }, {
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      rotateX: 0,
+      duration: 0.6,
+      ease: 'power3.out',
+      delay: 0.1,
+    });
+
+    // Fetch content (cached)
+    if (!cache[type]) {
+      try {
+        const res = await fetch(url);
+        const html = await res.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const legalPage = doc.querySelector('.legal-page');
+        if (legalPage) {
+          // Remove h1 and .legal-updated (we have our own header)
+          const h1 = legalPage.querySelector('h1');
+          const updated = legalPage.querySelector('.legal-updated');
+          const toc = legalPage.querySelector('.legal-toc');
+          if (h1) h1.remove();
+          if (updated) h1; // already removed
+          if (toc) toc.remove();
+          cache[type] = legalPage.innerHTML;
+        }
+      } catch {
+        cache[type] = '<p style="color:rgba(255,255,255,0.5);text-align:center;padding:40px 0;">Failed to load. Please try again.</p>';
+      }
+    }
+
+    contentEl.innerHTML = cache[type];
+
+    // Animate sections in with stagger
+    const sections = contentEl.querySelectorAll('section, h2, h3');
+    sections.forEach((el, i) => {
+      setTimeout(() => el.classList.add('lm-visible'), 80 + i * 40);
+    });
+
+    // Also reveal non-section direct children
+    const directChildren = contentEl.children;
+    for (let i = 0; i < directChildren.length; i++) {
+      const el = directChildren[i];
+      if (!el.classList.contains('lm-visible')) {
+        setTimeout(() => el.classList.add('lm-visible'), 80 + i * 30);
+      }
+    }
+  };
+
+  // Reading progress
+  if (bodyEl) {
+    bodyEl.addEventListener('scroll', () => {
+      const scrollTop = bodyEl.scrollTop;
+      const scrollHeight = bodyEl.scrollHeight - bodyEl.clientHeight;
+      const pct = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+      progressBar.style.width = pct + '%';
+    });
+  }
+
+  // Close
+  function closeLegalModal() {
+    gsap.to(container, {
+      opacity: 0,
+      scale: 0.92,
+      y: 30,
+      duration: 0.35,
+      ease: 'power2.in',
+    });
+    gsap.to(overlay, {
+      opacity: 0,
+      duration: 0.35,
+      ease: 'power2.in',
+      onComplete: () => {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+      },
+    });
+  }
+
+  if (closeBtn) closeBtn.addEventListener('click', closeLegalModal);
+  if (acceptBtn) acceptBtn.addEventListener('click', closeLegalModal);
+  if (overlay) overlay.addEventListener('click', closeLegalModal);
+
+  // ESC key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.style.display !== 'none') {
+      closeLegalModal();
+    }
+  });
+})();
+
+// ══════════════════════════════════════════════════════════════════════════
+// p5.js — Generative network graph (About section)
+// ══════════════════════════════════════════════════════════════════════════
+if (!isMobile && !prefersReducedMotion && typeof p5 !== 'undefined') {
+  new p5((sketch) => {
+    const parent = document.getElementById('aboutNetworkCanvas');
+    if (!parent) return;
+
+    const nodes = [];
+    const NODE_COUNT = 40;
+    const CONNECTION_DIST = 180;
+    let isVisible = false;
+
+    sketch.setup = function () {
+      const canvas = sketch.createCanvas(parent.offsetWidth, parent.offsetHeight);
+      canvas.parent(parent);
+      sketch.noFill();
+
+      for (let i = 0; i < NODE_COUNT; i++) {
+        nodes.push({
+          x: sketch.random(sketch.width),
+          y: sketch.random(sketch.height),
+          vx: sketch.random(-0.3, 0.3),
+          vy: sketch.random(-0.3, 0.3),
+          r: sketch.random(2, 5),
+        });
+      }
+    };
+
+    sketch.draw = function () {
+      if (!isVisible) return;
+      sketch.clear();
+
+      for (const n of nodes) {
+        n.x += n.vx;
+        n.y += n.vy;
+        if (n.x < 0 || n.x > sketch.width) n.vx *= -1;
+        if (n.y < 0 || n.y > sketch.height) n.vy *= -1;
+      }
+
+      // Draw connections
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const d = sketch.dist(nodes[i].x, nodes[i].y, nodes[j].x, nodes[j].y);
+          if (d < CONNECTION_DIST) {
+            const alpha = sketch.map(d, 0, CONNECTION_DIST, 80, 0);
+            sketch.stroke(212, 175, 55, alpha);
+            sketch.strokeWeight(1);
+            sketch.line(nodes[i].x, nodes[i].y, nodes[j].x, nodes[j].y);
+          }
+        }
+      }
+
+      // Draw nodes
+      for (const n of nodes) {
+        sketch.fill(212, 175, 55, 100);
+        sketch.noStroke();
+        sketch.ellipse(n.x, n.y, n.r * 2);
+        // Glow ring
+        sketch.noFill();
+        sketch.stroke(212, 175, 55, 25);
+        sketch.strokeWeight(0.5);
+        sketch.ellipse(n.x, n.y, n.r * 5);
+      }
+    };
+
+    sketch.windowResized = function () {
+      if (parent) sketch.resizeCanvas(parent.offsetWidth, parent.offsetHeight);
+    };
+
+    // Only run when visible
+    ScrollTrigger.create({
+      trigger: '#about',
+      start: 'top bottom',
+      end: 'bottom top',
+      onEnter: () => { isVisible = true; },
+      onLeave: () => { isVisible = false; },
+      onEnterBack: () => { isVisible = true; },
+      onLeaveBack: () => { isVisible = false; },
+    });
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// Matter.js — Physics-based floating security icons (Security section)
+// ══════════════════════════════════════════════════════════════════════════
+if (!isMobile && !prefersReducedMotion && typeof Matter !== 'undefined') {
+  (function initSecurityPhysics() {
+    const canvas = document.getElementById('securityPhysicsCanvas');
+    const section = document.getElementById('security');
+    if (!canvas || !section) return;
+
+    const { Engine, Render, Runner, Bodies, Composite, Mouse, MouseConstraint, Events } = Matter;
+
+    const w = section.offsetWidth;
+    const h = section.offsetHeight;
+    canvas.width = w;
+    canvas.height = h;
+
+    const engine = Engine.create({ gravity: { x: 0, y: 0.08 } });
+    const ctx = canvas.getContext('2d');
+
+    // Walls
+    const walls = [
+      Bodies.rectangle(w / 2, h + 25, w, 50, { isStatic: true }),
+      Bodies.rectangle(-25, h / 2, 50, h, { isStatic: true }),
+      Bodies.rectangle(w + 25, h / 2, 50, h, { isStatic: true }),
+      Bodies.rectangle(w / 2, -25, w, 50, { isStatic: true }),
+    ];
+    Composite.add(engine.world, walls);
+
+    // Floating circles (representing shield/lock/key icons)
+    const symbols = [];
+    const SYMBOL_COUNT = 18;
+    for (let i = 0; i < SYMBOL_COUNT; i++) {
+      const r = 12 + Math.random() * 24;
+      const body = Bodies.circle(
+        Math.random() * w,
+        Math.random() * h * 0.5,
+        r,
+        {
+          restitution: 0.6,
+          friction: 0.1,
+          frictionAir: 0.02,
+          render: { visible: false },
+        }
+      );
+      body._radius = r;
+      body._alpha = 0.35 + Math.random() * 0.4;
+      symbols.push(body);
+    }
+    Composite.add(engine.world, symbols);
+
+    let isActive = false;
+    let runner;
+
+    function drawBodies() {
+      if (!isActive) return;
+      ctx.clearRect(0, 0, w, h);
+
+      for (const body of symbols) {
+        const { x, y } = body.position;
+        ctx.beginPath();
+        ctx.arc(x, y, body._radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(212, 175, 55, ${body._alpha * 0.5})`;
+        ctx.fill();
+        ctx.strokeStyle = `rgba(212, 175, 55, ${body._alpha * 0.7})`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+      requestAnimationFrame(drawBodies);
+    }
+
+    ScrollTrigger.create({
+      trigger: section,
+      start: 'top bottom',
+      end: 'bottom top',
+      onEnter: () => {
+        isActive = true;
+        runner = Runner.create();
+        Runner.run(runner, engine);
+        drawBodies();
+      },
+      onLeave: () => { isActive = false; if (runner) Runner.stop(runner); },
+      onEnterBack: () => {
+        isActive = true;
+        runner = Runner.create();
+        Runner.run(runner, engine);
+        drawBodies();
+      },
+      onLeaveBack: () => { isActive = false; if (runner) Runner.stop(runner); },
+    });
+  })();
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// Rough.js — Hand-drawn decorative shapes (How It Works section)
+// ══════════════════════════════════════════════════════════════════════════
+if (!isMobile && !prefersReducedMotion && typeof rough !== 'undefined') {
+  (function initRoughCanvas() {
+    const canvas = document.getElementById('roughCanvas');
+    const section = document.getElementById('how-it-works');
+    if (!canvas || !section) return;
+
+    canvas.width = section.offsetWidth;
+    canvas.height = section.offsetHeight;
+    const rc = rough.canvas(canvas);
+
+    ScrollTrigger.create({
+      trigger: section,
+      start: 'top 80%',
+      once: true,
+      onEnter: () => {
+        const w = canvas.width;
+        const h = canvas.height;
+        const opts = { stroke: 'rgba(212,175,55,0.3)', strokeWidth: 1, roughness: 1.5, bowing: 2 };
+
+        // Scattered hand-drawn circles
+        for (let i = 0; i < 8; i++) {
+          const x = Math.random() * w;
+          const y = Math.random() * h;
+          const r = 20 + Math.random() * 60;
+          rc.circle(x, y, r, { ...opts, stroke: `rgba(212,175,55,${0.08 + Math.random() * 0.12})` });
+        }
+
+        // Wavy lines connecting the steps area
+        const midY = h * 0.55;
+        rc.line(w * 0.1, midY, w * 0.9, midY, { ...opts, stroke: 'rgba(212,175,55,0.08)', roughness: 3 });
+        rc.line(w * 0.15, midY + 30, w * 0.85, midY + 30, { ...opts, stroke: 'rgba(212,175,55,0.05)', roughness: 4 });
+
+        // Corner brackets
+        rc.rectangle(20, 20, 60, 60, { ...opts, stroke: 'rgba(212,175,55,0.1)' });
+        rc.rectangle(w - 80, h - 80, 60, 60, { ...opts, stroke: 'rgba(212,175,55,0.1)' });
+      },
+    });
+  })();
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// GPU.js — Accelerated metaball field (Features section)
+// ══════════════════════════════════════════════════════════════════════════
+if (!isMobile && !prefersReducedMotion && typeof GPU !== 'undefined') {
+  (function initGpuMetaballs() {
+    const canvas = document.getElementById('gpuMetaballCanvas');
+    const section = document.getElementById('features');
+    if (!canvas || !section) return;
+
+    // Use a low-res render for performance, scale up with CSS
+    const SCALE = 4; // render at 1/4 resolution
+    const w = Math.floor(section.offsetWidth / SCALE);
+    const h = Math.floor(section.offsetHeight / SCALE);
+    canvas.width = w;
+    canvas.height = h;
+
+    try {
+      const gpu = new GPU({ canvas, mode: 'gpu' });
+
+      const metaballKernel = gpu.createKernel(function (bx, by, time) {
+        const x = this.thread.x;
+        const y = this.constants.h - this.thread.y; // flip Y
+        let sum = 0;
+
+        // 5 metaballs
+        for (let i = 0; i < 5; i++) {
+          const cx = bx[i];
+          const cy = by[i];
+          const dx = x - cx;
+          const dy = y - cy;
+          const dist = Math.sqrt(dx * dx + dy * dy) + 1;
+          sum += 400 / dist;
+        }
+
+        // Gold color with threshold
+        const v = Math.min(sum / 8, 1);
+        if (v < 0.3) {
+          this.color(0, 0, 0, 0);
+        } else {
+          const fade = (v - 0.3) / 0.7;
+          this.color(0.83 * fade, 0.69 * fade, 0.22 * fade, fade * 0.6);
+        }
+      })
+        .setOutput([w, h])
+        .setGraphical(true)
+        .setConstants({ h });
+
+      // Metaball positions
+      const balls = Array.from({ length: 5 }, (_, i) => ({
+        x: w * (0.2 + Math.random() * 0.6),
+        y: h * (0.2 + Math.random() * 0.6),
+        vx: (Math.random() - 0.5) * 0.8,
+        vy: (Math.random() - 0.5) * 0.6,
+        phase: Math.random() * Math.PI * 2,
+      }));
+
+      let isActive = false;
+      let raf;
+
+      function animate(time) {
+        if (!isActive) return;
+
+        const bx = [];
+        const by = [];
+        for (const b of balls) {
+          b.x += b.vx + Math.sin(time * 0.001 + b.phase) * 0.3;
+          b.y += b.vy + Math.cos(time * 0.0008 + b.phase) * 0.2;
+          if (b.x < 0 || b.x > w) b.vx *= -1;
+          if (b.y < 0 || b.y > h) b.vy *= -1;
+          b.x = Math.max(0, Math.min(w, b.x));
+          b.y = Math.max(0, Math.min(h, b.y));
+          bx.push(b.x);
+          by.push(b.y);
+        }
+
+        metaballKernel(bx, by, time * 0.001);
+        raf = requestAnimationFrame(animate);
+      }
+
+      ScrollTrigger.create({
+        trigger: section,
+        start: 'top bottom',
+        end: 'bottom top',
+        onEnter: () => { isActive = true; raf = requestAnimationFrame(animate); },
+        onLeave: () => { isActive = false; cancelAnimationFrame(raf); },
+        onEnterBack: () => { isActive = true; raf = requestAnimationFrame(animate); },
+        onLeaveBack: () => { isActive = false; cancelAnimationFrame(raf); },
+      });
+    } catch (e) {
+      // GPU.js may fail on some hardware — graceful degradation
+      canvas.style.display = 'none';
+    }
+  })();
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// Pts.js — Flowing perlin noise field (Text Reveal section)
+// ══════════════════════════════════════════════════════════════════════════
+if (!prefersReducedMotion && typeof Pts !== 'undefined') {
+  (function initPtsField() {
+    const container = document.getElementById('ptsCanvas');
+    if (!container) return;
+
+    const { CanvasSpace, Create, Num, Geom } = Pts;
+
+    const space = new CanvasSpace(container).setup({
+      bgcolor: 'transparent',
+      resize: true,
+      retina: true,
+    });
+
+    const form = space.getForm();
+    let noiseSeed = 0;
+    let isVisible = false;
+
+    space.add({
+      animate: (time) => {
+        if (!isVisible) return;
+        noiseSeed += 0.002;
+        const pts = Create.gridPts(space.innerBound, 20, 12);
+
+        pts.forEach((p) => {
+          const noise = Num.normalizeValue(
+            Math.sin(p.x * 0.003 + noiseSeed) * Math.cos(p.y * 0.004 + noiseSeed * 0.7),
+            -1, 1
+          );
+          const angle = noise * Math.PI * 2;
+          const len = 12 + noise * 10;
+          const end = Geom.toRadian(angle);
+
+          const x2 = p.x + Math.cos(end) * len;
+          const y2 = p.y + Math.sin(end) * len;
+
+          const alpha = 0.05 + noise * 0.08;
+          form.strokeOnly(`rgba(212,175,55,${alpha})`, 0.8).line([p, [x2, y2]]);
+        });
+      },
+    });
+
+    space.play();
+
+    // Visibility control
+    ScrollTrigger.create({
+      trigger: '.text-reveal-section',
+      start: 'top bottom',
+      end: 'bottom top',
+      onEnter: () => { isVisible = true; },
+      onLeave: () => { isVisible = false; },
+      onEnterBack: () => { isVisible = true; },
+      onLeaveBack: () => { isVisible = false; },
+    });
+  })();
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// Particle Burst — on CTA button clicks (download, register, showcase)
+// ══════════════════════════════════════════════════════════════════════════
+(function initParticleBurst() {
+  if (prefersReducedMotion) return;
+
+  function burst(x, y) {
+    const count = 20;
+    for (let i = 0; i < count; i++) {
+      const particle = document.createElement('div');
+      particle.style.cssText = `
+        position:fixed;left:${x}px;top:${y}px;width:4px;height:4px;
+        border-radius:50%;background:#D4AF37;pointer-events:none;z-index:99999;
+      `;
+      document.body.appendChild(particle);
+
+      const angle = (Math.PI * 2 / count) * i + Math.random() * 0.5;
+      const dist = 40 + Math.random() * 80;
+      const dx = Math.cos(angle) * dist;
+      const dy = Math.sin(angle) * dist;
+
+      gsap.to(particle, {
+        x: dx,
+        y: dy,
+        opacity: 0,
+        scale: Math.random() * 2,
+        duration: 0.6 + Math.random() * 0.4,
+        ease: 'power3.out',
+        onComplete: () => particle.remove(),
+      });
+    }
+  }
+
+  // Attach to all primary CTA buttons
+  document.querySelectorAll('.btn-primary, .nav-cta, .store-btn').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      burst(e.clientX, e.clientY);
+    });
+  });
+})();
+
+// ══════════════════════════════════════════════════════════════════════════
+// Velocity.js — Smooth element reveals (especially on mobile)
+// ══════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════
+// About Section — Infinite icon animations (GSAP)
+// ══════════════════════════════════════════════════════════════════════════
+(function initAboutIconAnims() {
+  // ── Mission icon: pulsing ring + rotating beam ──────────────────────────
+  const missionRing = document.querySelector('.mission-ring');
+  const missionBeam = document.querySelector('.mission-beam');
+  const missionDot = document.querySelector('.mission-dot');
+
+  if (missionRing) {
+    // Ring breathes
+    gsap.to(missionRing, {
+      attr: { r: 11 },
+      opacity: 0.5,
+      duration: 1.5,
+      repeat: -1,
+      yoyo: true,
+      ease: 'sine.inOut',
+    });
+    // Whole icon slowly rotates
+    gsap.to('#aboutIconMission svg', {
+      rotation: 360,
+      duration: 12,
+      repeat: -1,
+      ease: 'none',
+      transformOrigin: '50% 50%',
+    });
+    // Dot pulses
+    if (missionDot) {
+      gsap.to(missionDot, {
+        attr: { r: 1.8 },
+        duration: 0.8,
+        repeat: -1,
+        yoyo: true,
+        ease: 'power2.inOut',
+      });
+    }
+  }
+
+  // ── Vision icon: blinking eye + scanning pupil ─────────────────────────
+  const visionLid = document.querySelector('.vision-lid');
+  const visionPupil = document.querySelector('.vision-pupil');
+
+  if (visionPupil) {
+    // Pupil scans left-right
+    gsap.to(visionPupil, {
+      attr: { cx: 14 },
+      duration: 2,
+      repeat: -1,
+      yoyo: true,
+      ease: 'sine.inOut',
+    });
+    // Pupil pulses size
+    gsap.to(visionPupil, {
+      attr: { r: 4 },
+      duration: 1.2,
+      repeat: -1,
+      yoyo: true,
+      ease: 'power1.inOut',
+    });
+  }
+
+  if (visionLid) {
+    // Blink every 4 seconds — scale the whole eye lid gently
+    const blinkTL = gsap.timeline({ repeat: -1, repeatDelay: 3.5 });
+    blinkTL.to(visionLid, {
+      attr: { d: 'M1 12s4-1 11-1 11 1 11 1-4 1-11 1-11-1-11-1z' },
+      duration: 0.12,
+      ease: 'power2.in',
+    });
+    blinkTL.to(visionLid, {
+      attr: { d: 'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z' },
+      duration: 0.2,
+      ease: 'power2.out',
+    });
+  }
+
+  // ── What We Do icon: check draws in + arc rotates ──────────────────────
+  const wwdArc = document.querySelector('.wwd-arc');
+  const wwdCheck = document.querySelector('.wwd-check');
+
+  if (wwdCheck) {
+    // Get the path length for stroke-dasharray animation
+    const checkLen = wwdCheck.getTotalLength ? wwdCheck.getTotalLength() : 30;
+    gsap.set(wwdCheck, { strokeDasharray: checkLen, strokeDashoffset: checkLen });
+
+    // Infinite draw-in / draw-out loop
+    gsap.to(wwdCheck, {
+      strokeDashoffset: 0,
+      duration: 1.2,
+      repeat: -1,
+      repeatDelay: 2,
+      yoyo: true,
+      ease: 'power2.inOut',
+    });
+  }
+
+  if (wwdArc) {
+    // Arc rotates continuously
+    gsap.to('#aboutIconWhatWeDo svg', {
+      rotation: 360,
+      duration: 8,
+      repeat: -1,
+      ease: 'none',
+      transformOrigin: '50% 50%',
+    });
+  }
+})();
+
+(function initVelocityReveals() {
+  if (typeof Velocity === 'undefined') return;
+
+  // Cards, features, steps, security items — smooth springy entrance
+  const revealTargets = document.querySelectorAll(
+    '.about-card, .product-card, .feature, .step, .security-item, .horizontal-card, .no-app-card'
+  );
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        Velocity(entry.target, {
+          opacity: [1, 0],
+          translateY: [0, 50],
+          scale: [1, 0.92],
+        }, {
+          duration: 800,
+          easing: [0.34, 1.56, 0.64, 1], // spring easing
+          delay: parseInt(entry.target.dataset.delay || '0') * 1000,
+        });
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+
+  revealTargets.forEach((el) => {
+    // Only apply if GSAP hasn't already handled it (check if opacity is 0)
+    const computed = window.getComputedStyle(el);
+    if (computed.opacity !== '0') {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(50px) scale(0.92)';
+    }
+    observer.observe(el);
+  });
+
+  // Smooth hover micro-interactions for buttons (mobile-friendly)
+  document.querySelectorAll('.btn, .store-btn, .nav-cta').forEach((btn) => {
+    btn.addEventListener('mouseenter', () => {
+      Velocity(btn, { scale: 1.03 }, { duration: 200, easing: 'easeOutQuad' });
+    });
+    btn.addEventListener('mouseleave', () => {
+      Velocity(btn, { scale: 1 }, { duration: 300, easing: 'easeOutQuad' });
+    });
+  });
+
+  // Smooth stat counter pulse on scroll
+  document.querySelectorAll('.stat, .about-stat').forEach((stat) => {
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          Velocity(entry.target, {
+            scale: [1, 0.85],
+            opacity: [1, 0],
+          }, {
+            duration: 600,
+            easing: [0.22, 1, 0.36, 1],
+          });
+          obs.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.3 });
+    stat.style.opacity = '0';
+    obs.observe(stat);
+  });
+})();
+
+// ══════════════════════════════════════════════════════════════════════════
+// Three.js — Interactive 3D Globe (About section)
+// ══════════════════════════════════════════════════════════════════════════
+(function initGlobe() {
+  const canvas = document.getElementById('aboutGlobe');
+  if (!canvas || typeof THREE === 'undefined') return;
+  const prefRM = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (prefRM) return;
+
+  const size = canvas.clientWidth || 320;
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+  camera.position.z = 2.8;
+
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+  renderer.setSize(size, size);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  // Globe sphere — faint wireframe grid
+  const globeGeo = new THREE.SphereGeometry(1, 40, 40);
+  const globeMat = new THREE.MeshBasicMaterial({
+    color: 0xD4AF37,
+    wireframe: true,
+    transparent: true,
+    opacity: 0.06,
+  });
+  const globe = new THREE.Mesh(globeGeo, globeMat);
+  scene.add(globe);
+
+  // Inner solid sphere — dark core
+  const innerGeo = new THREE.SphereGeometry(0.97, 32, 32);
+  const innerMat = new THREE.MeshBasicMaterial({
+    color: 0x0a0a0a,
+    transparent: true,
+    opacity: 0.92,
+  });
+  scene.add(new THREE.Mesh(innerGeo, innerMat));
+
+  // ── Continent outlines — dense lat/lon point cloud ─────────────────────
+  // Each array is [lat, lon] pairs tracing continent coastlines
+  const AFRICA = [
+    [37.1,-9.5],[36.8,-2.2],[37.5,10],[33,12],[32,24],[31.5,32],[29,33],[22,36.5],[18,38],[15,43],[12,45],[11.5,51],
+    [5,49],[2,45],[-1,42],[-5,40],[-10,40],[-15,41],[-20,44],[-25.5,35],[-30,31],[-34,26],[-34.5,20],[-33,18],
+    [-29,16.5],[-22,14],[-17,12],[-12,14],[-5,12],[0,10],[5,5],[5,1],[6,-2],[5,-5],[4,-8],[5,-11],[7,-13],
+    [10,-16],[13,-17],[15,-17],[18,-16],[21,-17],[25,-15],[30,-10],[33,-8],[35,-6],[36,-5],[37.1,-9.5],
+    // Interior detail
+    [10,0],[12,3],[15,10],[20,15],[25,25],[20,30],[15,32],[10,35],[5,30],[0,25],[-5,20],[-10,25],[-15,30],[-20,35],
+    [8,38],[6,35],[4,32],[2,28],[0,30],[-3,33],[-8,35],[-12,35],[-15,35],[-20,32],[-25,30],[-28,28],[-30,25],
+  ];
+  const EUROPE = [
+    [36,-9],[38,-7],[40,-9],[43,-9],[44,-1],[46,0],[48,-5],[51,-5],[52,2],[54,8],[57,10],[60,5],[62,6],[65,14],
+    [70,20],[72,28],[70,32],[65,30],[60,25],[55,22],[52,20],[48,18],[45,15],[42,20],[40,25],[38,24],[37,22],[36,15],
+    [38,12],[40,15],[42,13],[44,10],[45,7],[44,3],[42,3],[40,0],[38,-2],[36,-5],[36,-9],
+  ];
+  const ASIA = [
+    [42,27],[45,40],[40,50],[37,55],[25,57],[23,60],[20,63],[25,67],[30,70],[35,72],[40,68],[45,60],[50,55],
+    [55,60],[60,70],[65,80],[70,90],[65,105],[60,120],[55,135],[50,140],[45,142],[40,140],[35,137],[30,130],
+    [25,120],[22,115],[20,107],[15,100],[10,105],[5,103],[1,104],[-6,106],[-8,115],[0,118],[5,120],[10,115],
+    [15,110],[20,110],[25,100],[30,95],[28,85],[25,80],[20,73],[15,75],[10,78],[8,77],[12,80],[15,80],
+    [20,72],[25,68],[30,65],[32,55],[30,50],[35,45],[40,40],[42,27],
+  ];
+  const NAMERICA = [
+    [70,-165],[65,-170],[60,-165],[55,-160],[50,-130],[48,-125],[40,-124],[35,-120],[30,-118],[25,-110],
+    [20,-105],[15,-92],[15,-87],[18,-88],[21,-87],[22,-80],[25,-80],[30,-85],[30,-90],[33,-95],[35,-95],
+    [40,-75],[42,-70],[45,-65],[48,-60],[50,-55],[55,-60],[60,-65],[65,-60],[70,-70],[72,-80],[70,-95],
+    [65,-100],[60,-110],[65,-140],[70,-160],[70,-165],
+  ];
+  const SAMERICA = [
+    [12,-72],[10,-75],[8,-77],[5,-77],[0,-80],[-5,-80],[-10,-77],[-15,-75],[-20,-70],[-25,-65],
+    [-30,-58],[-35,-57],[-40,-65],[-45,-65],[-50,-70],[-55,-68],[-55,-65],[-52,-60],[-48,-55],
+    [-40,-55],[-35,-50],[-30,-50],[-25,-45],[-20,-40],[-15,-40],[-10,-37],[-5,-35],[0,-50],
+    [5,-60],[8,-62],[10,-67],[12,-72],
+  ];
+  const AUSTRALIA = [
+    [-12,130],[-15,125],[-20,118],[-25,114],[-30,115],[-33,118],[-35,135],[-38,145],[-37,150],
+    [-33,152],[-28,153],[-22,150],[-18,146],[-15,145],[-12,142],[-10,135],[-12,130],
+  ];
+
+  const continents = [
+    { pts: AFRICA, color: 0xD4AF37, size: 0.015, opacity: 0.8, step: 3 },
+    { pts: EUROPE, color: 0xD4AF37, size: 0.012, opacity: 0.5, step: 3 },
+    { pts: ASIA, color: 0xD4AF37, size: 0.012, opacity: 0.45, step: 4 },
+    { pts: NAMERICA, color: 0xD4AF37, size: 0.012, opacity: 0.45, step: 4 },
+    { pts: SAMERICA, color: 0xD4AF37, size: 0.012, opacity: 0.45, step: 3 },
+    { pts: AUSTRALIA, color: 0xD4AF37, size: 0.011, opacity: 0.4, step: 3 },
+  ];
+
+  const continentGroup = new THREE.Group();
+
+  // Plot points and also fill between outline points
+  continents.forEach(({ pts, color, size, opacity, step: fillStep }) => {
+    // Outline dots
+    pts.forEach(([lat, lon]) => {
+      const vec = latLonToVec3(lat, lon, 1.005);
+      const dotGeo = new THREE.SphereGeometry(size, 6, 6);
+      const dotMat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity });
+      const dot = new THREE.Mesh(dotGeo, dotMat);
+      dot.position.copy(vec);
+      continentGroup.add(dot);
+    });
+
+    // Fill interior with scattered dots for visible landmass
+    if (pts.length > 4) {
+      const minLat = Math.min(...pts.map(p => p[0]));
+      const maxLat = Math.max(...pts.map(p => p[0]));
+      const minLon = Math.min(...pts.map(p => p[1]));
+      const maxLon = Math.max(...pts.map(p => p[1]));
+      const step = fillStep || 4;
+      const fillOpacity = opacity * 0.5;
+
+      for (let lat = minLat; lat <= maxLat; lat += step) {
+        for (let lon = minLon; lon <= maxLon; lon += step) {
+          // Simple point-in-polygon (ray casting)
+          let inside = false;
+          for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+            const [yi, xi] = pts[i];
+            const [yj, xj] = pts[j];
+            if (((yi > lat) !== (yj > lat)) && (lon < (xj - xi) * (lat - yi) / (yj - yi) + xi)) {
+              inside = !inside;
+            }
+          }
+          if (inside) {
+            const vec = latLonToVec3(lat, lon, 1.004);
+            const dGeo = new THREE.SphereGeometry(size * 0.7, 4, 4);
+            const dMat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: fillOpacity });
+            const d = new THREE.Mesh(dGeo, dMat);
+            d.position.copy(vec);
+            continentGroup.add(d);
+          }
+        }
+      }
+    }
+  });
+  scene.add(continentGroup);
+
+  // Key city markers (larger, brighter)
+  const dotPositions = [
+    { lat: 5.6, lon: -0.2 },    // Accra, Ghana
+    { lat: 6.5, lon: 3.4 },     // Lagos, Nigeria
+    { lat: -1.3, lon: 36.8 },   // Nairobi, Kenya
+    { lat: -33.9, lon: 18.4 },  // Cape Town, SA
+    { lat: -26.2, lon: 28.0 },  // Johannesburg, SA
+    { lat: 30.0, lon: 31.2 },   // Cairo, Egypt
+    { lat: 14.7, lon: -17.5 },  // Dakar, Senegal
+    { lat: -4.3, lon: 15.3 },   // Kinshasa, DRC
+    { lat: 9.0, lon: 38.7 },    // Addis Ababa, Ethiopia
+    { lat: 0.3, lon: 32.6 },    // Kampala, Uganda
+    { lat: -6.8, lon: 39.3 },   // Dar es Salaam, Tanzania
+    { lat: 33.9, lon: -6.9 },   // Rabat, Morocco
+  ];
+
+  function latLonToVec3(lat, lon, radius) {
+    const phi = (90 - lat) * Math.PI / 180;
+    const theta = (lon + 180) * Math.PI / 180;
+    return new THREE.Vector3(
+      -radius * Math.sin(phi) * Math.cos(theta),
+      radius * Math.cos(phi),
+      radius * Math.sin(phi) * Math.sin(theta)
+    );
+  }
+
+  const dotGroup = new THREE.Group();
+  dotPositions.forEach((pos) => {
+    const vec = latLonToVec3(pos.lat, pos.lon, 1.01);
+    const dotGeo = new THREE.SphereGeometry(0.02, 8, 8);
+    const dotMat = new THREE.MeshBasicMaterial({ color: 0xD4AF37 });
+    const dot = new THREE.Mesh(dotGeo, dotMat);
+    dot.position.copy(vec);
+    dotGroup.add(dot);
+
+    // Pulse ring around each dot
+    const ringGeo = new THREE.RingGeometry(0.025, 0.04, 16);
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: 0xD4AF37,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.3,
+    });
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.position.copy(vec);
+    ring.lookAt(new THREE.Vector3(0, 0, 0));
+    ring._baseScale = 1;
+    ring._phase = Math.random() * Math.PI * 2;
+    dotGroup.add(ring);
+  });
+  scene.add(dotGroup);
+
+  // Connection arcs between some cities
+  const arcPairs = [[0, 1], [1, 3], [2, 4], [0, 8], [5, 6], [2, 10]];
+  arcPairs.forEach(([a, b]) => {
+    const start = latLonToVec3(dotPositions[a].lat, dotPositions[a].lon, 1.01);
+    const end = latLonToVec3(dotPositions[b].lat, dotPositions[b].lon, 1.01);
+    const mid = start.clone().add(end).multiplyScalar(0.5).normalize().multiplyScalar(1.3);
+    const curve = new THREE.QuadraticBezierCurve3(start, mid, end);
+    const points = curve.getPoints(32);
+    const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
+    const lineMat = new THREE.LineBasicMaterial({ color: 0xD4AF37, transparent: true, opacity: 0.15 });
+    scene.add(new THREE.Line(lineGeo, lineMat));
+  });
+
+  // Mouse drag rotation
+  let isDragging = false;
+  let prevX = 0, rotVelX = 0;
+
+  canvas.addEventListener('mousedown', (e) => { isDragging = true; prevX = e.clientX; });
+  canvas.addEventListener('touchstart', (e) => { isDragging = true; prevX = e.touches[0].clientX; }, { passive: true });
+  window.addEventListener('mouseup', () => { isDragging = false; });
+  window.addEventListener('touchend', () => { isDragging = false; });
+  canvas.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    rotVelX = (e.clientX - prevX) * 0.005;
+    prevX = e.clientX;
+  });
+  canvas.addEventListener('touchmove', (e) => {
+    if (!isDragging) return;
+    rotVelX = (e.touches[0].clientX - prevX) * 0.005;
+    prevX = e.touches[0].clientX;
+  }, { passive: true });
+
+  let isActive = false;
+
+  function animate() {
+    if (!isActive) { requestAnimationFrame(animate); return; }
+
+    // Auto-rotate + drag momentum
+    const autoSpeed = isDragging ? 0 : 0.002;
+    rotVelX *= 0.95; // dampen drag
+    globe.rotation.y += autoSpeed + rotVelX;
+    dotGroup.rotation.y = globe.rotation.y;
+    continentGroup.rotation.y = globe.rotation.y;
+
+    // Pulse the rings
+    dotGroup.children.forEach((child) => {
+      if (child._phase !== undefined) {
+        const t = performance.now() * 0.001;
+        const pulse = 1 + 0.4 * Math.sin(t * 2 + child._phase);
+        child.scale.setScalar(pulse);
+        child.material.opacity = 0.15 + 0.15 * Math.sin(t * 2 + child._phase);
+      }
+    });
+
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+  }
+
+  ScrollTrigger.create({
+    trigger: '#about',
+    start: 'top bottom',
+    end: 'bottom top',
+    onEnter: () => { isActive = true; },
+    onLeave: () => { isActive = false; },
+    onEnterBack: () => { isActive = true; },
+    onLeaveBack: () => { isActive = false; },
+  });
+
+  requestAnimationFrame(animate);
+
+  window.addEventListener('resize', () => {
+    const s = canvas.clientWidth || 320;
+    renderer.setSize(s, s);
+  });
+})();
+
+// ══════════════════════════════════════════════════════════════════════════
+// Anime.js — Smooth entrance animations + staggered reveals
+// ══════════════════════════════════════════════════════════════════════════
+(function initAnimeAnimations() {
+  if (typeof anime === 'undefined') return;
+
+  // ── Section tag text — letter-by-letter reveal on scroll ──────────────
+  const sectionTags = document.querySelectorAll('.section-tag');
+  const tagObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      const el = entry.target;
+      const text = el.textContent;
+      el.innerHTML = text.split('').map((c) =>
+        c === ' ' ? ' ' : `<span style="display:inline-block;opacity:0">${c}</span>`
+      ).join('');
+      anime({
+        targets: el.querySelectorAll('span'),
+        opacity: [0, 1],
+        translateY: [10, 0],
+        easing: 'easeOutExpo',
+        duration: 600,
+        delay: anime.stagger(30),
+      });
+      tagObserver.unobserve(el);
+    });
+  }, { threshold: 0.5 });
+  sectionTags.forEach((tag) => tagObserver.observe(tag));
+
+  // ── Stat numbers — count up with anime.js spring ──────────────────────
+  const statObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      const el = entry.target;
+      const target = parseInt(el.dataset.count) || 0;
+      const obj = { val: 0 };
+      anime({
+        targets: obj,
+        val: target,
+        round: 1,
+        easing: 'easeOutExpo',
+        duration: 2000,
+        update: () => {
+          el.textContent = obj.val.toLocaleString();
+        },
+      });
+      statObserver.unobserve(el);
+    });
+  }, { threshold: 0.3 });
+  document.querySelectorAll('[data-count]').forEach((el) => statObserver.observe(el));
+
+  // ── NFC teaser — pulse animation ──────────────────────────────────────
+  const nfcIcon = document.querySelector('.nfc-icon');
+  if (nfcIcon) {
+    anime({
+      targets: '.nfc-icon path',
+      strokeDashoffset: [anime.setDashoffset, 0],
+      easing: 'easeInOutSine',
+      duration: 1500,
+      delay: anime.stagger(300),
+      loop: true,
+      direction: 'alternate',
+    });
+  }
+
+  // ── Hero badge dot — breathing pulse ──────────────────────────────────
+  anime({
+    targets: '.hero-badge-dot',
+    scale: [1, 1.5],
+    opacity: [1, 0.4],
+    easing: 'easeInOutSine',
+    duration: 1500,
+    loop: true,
+    direction: 'alternate',
+  });
+
+  // ── Hero title lines — staggered slide-up on load ──────────────────────
+  anime({
+    targets: '.hero-line',
+    translateY: [60, 0],
+    opacity: [0, 1],
+    easing: 'easeOutExpo',
+    duration: 1200,
+    delay: anime.stagger(200, { start: 800 }),
+  });
+
+  // ── Hero CTA buttons — spring entrance ────────────────────────────────
+  anime({
+    targets: '.hero-ctas .btn',
+    translateY: [30, 0],
+    opacity: [0, 1],
+    scale: [0.9, 1],
+    easing: 'spring(1, 80, 10, 0)',
+    delay: anime.stagger(150, { start: 1600 }),
+  });
+
+  // ── Card feature list items — staggered slide-in on scroll ────────────
+  const listObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      anime({
+        targets: entry.target.querySelectorAll('li'),
+        translateX: [-20, 0],
+        opacity: [0, 1],
+        easing: 'easeOutExpo',
+        duration: 600,
+        delay: anime.stagger(80),
+      });
+      listObserver.unobserve(entry.target);
+    });
+  }, { threshold: 0.3 });
+  document.querySelectorAll('.card-features, .phone-feature-list').forEach((ul) => listObserver.observe(ul));
+
+  // ── Horizontal card icons — rotate in on scroll ───────────────────────
+  const hCardObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      const icon = entry.target.querySelector('.h-card-icon svg');
+      if (icon) {
+        anime({
+          targets: icon,
+          rotate: ['-90deg', '0deg'],
+          scale: [0, 1],
+          opacity: [0, 1],
+          easing: 'spring(1, 80, 12, 0)',
+          duration: 1000,
+        });
+      }
+      hCardObserver.unobserve(entry.target);
+    });
+  }, { threshold: 0.3 });
+  document.querySelectorAll('.horizontal-card').forEach((card) => hCardObserver.observe(card));
+
+  // ── Feature icons — draw-in SVG strokes on scroll ─────────────────────
+  const featureObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      const paths = entry.target.querySelectorAll('.feature-icon-wrap svg path, .feature-icon-wrap svg rect, .feature-icon-wrap svg circle, .feature-icon-wrap svg line, .feature-icon-wrap svg polyline');
+      if (paths.length) {
+        anime({
+          targets: paths,
+          strokeDashoffset: [anime.setDashoffset, 0],
+          easing: 'easeInOutQuad',
+          duration: 1200,
+          delay: anime.stagger(100),
+        });
+      }
+      featureObserver.unobserve(entry.target);
+    });
+  }, { threshold: 0.3 });
+  document.querySelectorAll('.feature').forEach((f) => featureObserver.observe(f));
+
+  // ── Security grid items — flip-in entrance ────────────────────────────
+  const secObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      anime({
+        targets: entry.target,
+        rotateY: [90, 0],
+        opacity: [0, 1],
+        easing: 'easeOutExpo',
+        duration: 800,
+      });
+      secObserver.unobserve(entry.target);
+    });
+  }, { threshold: 0.2 });
+  document.querySelectorAll('.security-item').forEach((item) => {
+    item.style.opacity = '0';
+    secObserver.observe(item);
+  });
+
+  // ── Step numbers — bounce in ──────────────────────────────────────────
+  const stepObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      const num = entry.target.querySelector('.step-number span');
+      if (num) {
+        anime({
+          targets: num,
+          scale: [0, 1],
+          rotate: ['45deg', '0deg'],
+          easing: 'spring(1, 70, 10, 0)',
+          duration: 800,
+        });
+      }
+      const content = entry.target.querySelector('.step-content');
+      if (content) {
+        anime({
+          targets: content.children,
+          translateY: [20, 0],
+          opacity: [0, 1],
+          easing: 'easeOutExpo',
+          duration: 600,
+          delay: anime.stagger(100, { start: 200 }),
+        });
+      }
+      stepObserver.unobserve(entry.target);
+    });
+  }, { threshold: 0.3 });
+  document.querySelectorAll('.step').forEach((s) => stepObserver.observe(s));
+
+  // ── Phone labels — slide up with spring ───────────────────────────────
+  const phoneLabelObs = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      anime({
+        targets: entry.target,
+        translateY: [15, 0],
+        opacity: [0, 1],
+        easing: 'spring(1, 80, 10, 0)',
+        duration: 800,
+      });
+      phoneLabelObs.unobserve(entry.target);
+    });
+  }, { threshold: 0.5 });
+  document.querySelectorAll('.phone-label').forEach((lbl) => {
+    lbl.style.opacity = '0';
+    phoneLabelObs.observe(lbl);
+  });
+
+  // ── Footer columns — waterfall stagger ────────────────────────────────
+  const footerObs = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      anime({
+        targets: entry.target.querySelectorAll('.footer-col'),
+        translateY: [30, 0],
+        opacity: [0, 1],
+        easing: 'easeOutExpo',
+        duration: 700,
+        delay: anime.stagger(120),
+      });
+      anime({
+        targets: entry.target.querySelectorAll('.footer-col a'),
+        translateX: [-10, 0],
+        opacity: [0, 1],
+        easing: 'easeOutExpo',
+        duration: 500,
+        delay: anime.stagger(40, { start: 300 }),
+      });
+      footerObs.unobserve(entry.target);
+    });
+  }, { threshold: 0.2 });
+  const footerLinks = document.querySelector('.footer-links');
+  if (footerLinks) footerObs.observe(footerLinks);
+
+  // ── Showcase CTA tagline — word-by-word reveal ────────────────────────
+  const tagline = document.querySelector('.showcase-tagline');
+  if (tagline) {
+    const taglineObs = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        const words = tagline.textContent.split(' ');
+        tagline.innerHTML = words.map((w) =>
+          `<span style="display:inline-block;opacity:0;margin-right:4px">${w}</span>`
+        ).join('');
+        anime({
+          targets: tagline.querySelectorAll('span'),
+          opacity: [0, 1],
+          translateY: [12, 0],
+          easing: 'easeOutExpo',
+          duration: 500,
+          delay: anime.stagger(50),
+        });
+        taglineObs.unobserve(tagline);
+      });
+    }, { threshold: 0.5 });
+    taglineObs.observe(tagline);
+  }
+
+  // ── Registration form fields — stagger entrance on scroll ─────────────
+  const regForm = document.getElementById('sellerRegForm');
+  if (regForm) {
+    const regObs = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        anime({
+          targets: regForm.querySelectorAll('.reg-field, .reg-row, .reg-terms, .reg-submit'),
+          translateY: [20, 0],
+          opacity: [0, 1],
+          easing: 'easeOutExpo',
+          duration: 600,
+          delay: anime.stagger(60),
+        });
+        regObs.unobserve(regForm);
+      });
+    }, { threshold: 0.1 });
+    regObs.observe(regForm);
+  }
+
+  // ── Download section store buttons — elastic pop ──────────────────────
+  const dlObs = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      anime({
+        targets: entry.target.querySelectorAll('.store-btn'),
+        scale: [0.8, 1],
+        opacity: [0, 1],
+        easing: 'spring(1, 60, 12, 0)',
+        delay: anime.stagger(150),
+      });
+      dlObs.unobserve(entry.target);
+    });
+  }, { threshold: 0.3 });
+  const dlBtns = document.querySelector('.download-buttons');
+  if (dlBtns) {
+    dlBtns.querySelectorAll('.store-btn').forEach((b) => { b.style.opacity = '0'; });
+    dlObs.observe(dlBtns);
+  }
+
+  // ── Continuous: nav links subtle letter-spacing pulse ──────────────────
+  anime({
+    targets: '.nav-link',
+    letterSpacing: ['0em', '0.04em'],
+    easing: 'easeInOutSine',
+    duration: 3000,
+    loop: true,
+    direction: 'alternate',
+    delay: anime.stagger(400),
+  });
+
+  // ── Continuous: scroll indicator line pulse ───────────────────────────
+  anime({
+    targets: '.scroll-line',
+    scaleY: [0.5, 1],
+    opacity: [0.3, 1],
+    easing: 'easeInOutSine',
+    duration: 1500,
+    loop: true,
+    direction: 'alternate',
+  });
+
+  // ── Buyer CTA — QR code blocks stagger reveal + feature checkmarks ───
+  const buyerCtaObs = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+
+      // QR code blocks fade in with stagger
+      anime({
+        targets: '#buyerCtaQr rect',
+        opacity: [0, function(el) { return parseFloat(el.getAttribute('opacity')) || 0.3; }],
+        scale: [0.5, 1],
+        easing: 'easeOutExpo',
+        duration: 800,
+        delay: anime.stagger(60),
+      });
+
+      // QR frame corners draw in
+      anime({
+        targets: '#buyerCtaQr path',
+        strokeDashoffset: [anime.setDashoffset, 0],
+        easing: 'easeInOutQuad',
+        duration: 1200,
+        delay: anime.stagger(100, { start: 300 }),
+      });
+
+      // Feature items slide in
+      anime({
+        targets: '.buyer-feature',
+        translateX: [-30, 0],
+        opacity: [0, 1],
+        easing: 'easeOutExpo',
+        duration: 700,
+        delay: anime.stagger(120, { start: 500 }),
+      });
+
+      // Store buttons elastic pop
+      anime({
+        targets: '.buyer-cta-buttons .store-btn',
+        scale: [0.8, 1],
+        opacity: [0, 1],
+        easing: 'spring(1, 70, 10, 0)',
+        delay: anime.stagger(150, { start: 900 }),
+      });
+
+      buyerCtaObs.unobserve(entry.target);
+    });
+  }, { threshold: 0.2 });
+  const buyerCta = document.getElementById('buyerCta');
+  if (buyerCta) {
+    buyerCta.querySelectorAll('.buyer-feature, .buyer-cta-buttons .store-btn').forEach((el) => {
+      el.style.opacity = '0';
+    });
+    buyerCtaObs.observe(buyerCta);
+  }
+
+  // ── Buyer QR — continuous shimmer on QR blocks ────────────────────────
+  anime({
+    targets: '#buyerCtaQr rect[fill="#D4AF37"]',
+    opacity: [
+      { value: function(el) { return (parseFloat(el.getAttribute('opacity')) || 0.2) * 0.5; }, duration: 1500 },
+      { value: function(el) { return parseFloat(el.getAttribute('opacity')) || 0.2; }, duration: 1500 },
+    ],
+    easing: 'easeInOutSine',
+    loop: true,
+    delay: anime.stagger(100),
+  });
+
+  // ── Continuous: about card icon containers subtle rotate ──────────────
+  anime({
+    targets: '.about-card-icon',
+    rotate: ['-2deg', '2deg'],
+    easing: 'easeInOutSine',
+    duration: 4000,
+    loop: true,
+    direction: 'alternate',
+    delay: anime.stagger(600),
+  });
+
+  // ── Continuous: horizontal card icons — each unique infinite animation ─
+  const hCards = document.querySelectorAll('.horizontal-card');
+
+  // QR Payments — scanning pulse on the grid
+  if (hCards[0]) {
+    anime({
+      targets: hCards[0].querySelectorAll('.h-card-icon svg rect'),
+      opacity: [1, 0.4],
+      easing: 'easeInOutSine',
+      duration: 1200,
+      loop: true,
+      direction: 'alternate',
+      delay: anime.stagger(150),
+    });
+    anime({
+      targets: hCards[0].querySelectorAll('.h-card-icon svg path'),
+      strokeDashoffset: [anime.setDashoffset, 0],
+      easing: 'easeInOutQuad',
+      duration: 2000,
+      loop: true,
+      direction: 'alternate',
+    });
+  }
+
+  // Mobile Money — phone bobbing + screen dot pulse
+  if (hCards[1]) {
+    anime({
+      targets: hCards[1].querySelector('.h-card-icon svg'),
+      translateY: [-2, 2],
+      easing: 'easeInOutSine',
+      duration: 2000,
+      loop: true,
+      direction: 'alternate',
+    });
+    anime({
+      targets: hCards[1].querySelectorAll('.h-card-icon svg path'),
+      opacity: [0.4, 1],
+      scale: [1, 1.5],
+      easing: 'easeInOutSine',
+      duration: 1000,
+      loop: true,
+      direction: 'alternate',
+    });
+  }
+
+  // Saved Cards — card swipe slide + stripe shimmer
+  if (hCards[2]) {
+    anime({
+      targets: hCards[2].querySelector('.h-card-icon svg rect'),
+      translateX: [-2, 2],
+      easing: 'easeInOutSine',
+      duration: 3000,
+      loop: true,
+      direction: 'alternate',
+    });
+    anime({
+      targets: hCards[2].querySelectorAll('.h-card-icon svg line'),
+      strokeDashoffset: [anime.setDashoffset, 0],
+      opacity: [0.3, 1],
+      easing: 'easeInOutQuad',
+      duration: 1500,
+      loop: true,
+      direction: 'alternate',
+      delay: anime.stagger(200),
+    });
+  }
+
+  // Wallet — open/close breathing
+  if (hCards[3]) {
+    anime({
+      targets: hCards[3].querySelectorAll('.h-card-icon svg path'),
+      strokeDashoffset: [anime.setDashoffset, 0],
+      easing: 'easeInOutSine',
+      duration: 2500,
+      loop: true,
+      direction: 'alternate',
+      delay: anime.stagger(300),
+    });
+    anime({
+      targets: hCards[3].querySelector('.h-card-icon svg'),
+      scale: [1, 1.06],
+      easing: 'easeInOutSine',
+      duration: 2000,
+      loop: true,
+      direction: 'alternate',
+    });
+  }
+
+  // Seller Dashboard — bars growing
+  if (hCards[4]) {
+    anime({
+      targets: hCards[4].querySelectorAll('.h-card-icon svg path'),
+      strokeDashoffset: [anime.setDashoffset, 0],
+      easing: 'easeInOutQuad',
+      duration: 1800,
+      loop: true,
+      direction: 'alternate',
+      delay: anime.stagger(200),
+    });
+    anime({
+      targets: hCards[4].querySelector('.h-card-icon svg'),
+      rotate: ['-1deg', '1deg'],
+      easing: 'easeInOutSine',
+      duration: 3000,
+      loop: true,
+      direction: 'alternate',
+    });
+  }
+})();
+
+// ══════════════════════════════════════════════════════════════════════════
+// PARALLAX SCROLL — Vivid depth layers, scrubbed to scroll position
+// Each section has its own depth and speed, creating a rich layered feel
+// ══════════════════════════════════════════════════════════════════════════
+(function initParallaxLayers() {
+  if (prefersReducedMotion) return;
+
+  // ── Hero depth layers — content recedes as you leave ──────────────────
+  const heroContent = document.querySelector('.hero-content');
+  const heroShield = document.querySelector('.hero-shield-wrap');
+  const heroPhotoBg = document.getElementById('heroPhotoBg');
+
+  if (heroContent) {
+    gsap.to(heroContent, {
+      y: -60,
+      scale: 0.96,
+      opacity: 0,
+      ease: 'none',
+      scrollTrigger: { trigger: '#hero', start: '60% center', end: 'bottom top', scrub: true },
+    });
+  }
+  if (heroShield) {
+    gsap.to(heroShield, {
+      y: -40,
+      opacity: 0.3,
+      ease: 'none',
+      scrollTrigger: { trigger: '#hero', start: '60% center', end: 'bottom top', scrub: true },
+    });
+  }
+  if (heroPhotoBg) {
+    gsap.to(heroPhotoBg, {
+      y: 100,
+      scale: 1.08,
+      ease: 'none',
+      scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom top', scrub: true },
+    });
+  }
+
+  // ── Section headings — each rises at different speed than its content ──
+  document.querySelectorAll('.section-header').forEach((header) => {
+    gsap.from(header, {
+      y: 60,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: header,
+        start: 'top 95%',
+        end: 'top 40%',
+        scrub: 1.5,
+      },
+    });
+  });
+
+  // ── About cards — staggered depth ─────────────────────────────────────
+  document.querySelectorAll('.about-card').forEach((card, i) => {
+    gsap.from(card, {
+      y: 80 + i * 30,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: card,
+        start: 'top bottom',
+        end: 'top 50%',
+        scrub: 1.5,
+      },
+    });
+  });
+
+  // ── Phone mockups — opposite direction parallax ───────────────────────
+  const phoneLeft = document.querySelector('.phone-left');
+  const phoneRight = document.querySelector('.phone-right');
+  if (phoneLeft && !isMobile) {
+    gsap.from(phoneLeft, {
+      x: -80, y: 100, rotation: -8,
+      ease: 'none',
+      scrollTrigger: { trigger: '.phone-showcase', start: 'top bottom', end: 'top 20%', scrub: 1.5 },
+    });
+  }
+  if (phoneRight && !isMobile) {
+    gsap.from(phoneRight, {
+      x: 80, y: 120, rotation: 8,
+      ease: 'none',
+      scrollTrigger: { trigger: '.phone-showcase', start: 'top bottom', end: 'top 20%', scrub: 1.5 },
+    });
+  }
+
+  // ── Features grid — cards rise at staggered speeds ────────────────────
+  document.querySelectorAll('.feature').forEach((feat, i) => {
+    gsap.from(feat, {
+      y: 50 + (i % 3) * 25,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: feat,
+        start: 'top bottom',
+        end: 'top 55%',
+        scrub: 1.5,
+      },
+    });
+  });
+
+  // ── Steps — cascade entry from alternating sides ──────────────────────
+  document.querySelectorAll('.step').forEach((step, i) => {
+    gsap.from(step, {
+      x: i % 2 === 0 ? -40 : 40,
+      y: 40,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: step,
+        start: 'top bottom',
+        end: 'top 60%',
+        scrub: 1.5,
+      },
+    });
+  });
+
+  // ── Security items — scale up from small ──────────────────────────────
+  document.querySelectorAll('.security-item').forEach((item, i) => {
+    gsap.from(item, {
+      scale: 0.85,
+      y: 40,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: item,
+        start: 'top bottom',
+        end: 'top 65%',
+        scrub: 1.5,
+      },
+    });
+  });
+
+  // ── Padlock — rotates and scales on scroll ────────────────────────────
+  const securityLock = document.getElementById('securityLock');
+  if (securityLock) {
+    gsap.from(securityLock, {
+      rotation: -20,
+      scale: 0.7,
+      y: 60,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '#security',
+        start: 'top bottom',
+        end: 'top 30%',
+        scrub: 1.5,
+      },
+    });
+  }
+
+  // ── Register form card — perspective zoom ─────────────────────────────
+  const regCard = document.querySelector('.reg-card');
+  if (regCard) {
+    gsap.from(regCard, {
+      y: 80,
+      scale: 0.9,
+      rotateX: 4,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '#register',
+        start: 'top bottom',
+        end: 'top 30%',
+        scrub: 1.5,
+      },
+    });
+  }
+
+  // ── Footer — rises into view with depth ───────────────────────────────
+  const footer = document.querySelector('.footer');
+  if (footer) {
+    gsap.from(footer, {
+      y: 50,
+      opacity: 0.5,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: footer,
+        start: 'top bottom',
+        end: 'top 70%',
+        scrub: 1.5,
+      },
+    });
+  }
+})();
+
+// ══════════════════════════════════════════════════════════════════════════
+// SHUTTER REVEAL + SCROLL COLOR SHIFT (Evolve-inspired)
+// ══════════════════════════════════════════════════════════════════════════
+(function initShutterAndColorShift() {
+  // ── Shutter reveal — venetian-blind open on scroll ────────────────────
+  const shutterSections = document.querySelectorAll('.shutter-reveal');
+  shutterSections.forEach((section) => {
+    ScrollTrigger.create({
+      trigger: section,
+      start: 'top 85%',
+      once: true,
+      onEnter: () => section.classList.add('shutter-open'),
+    });
+  });
+
+  // ── Background color shift — body transitions between themes ──────────
+  const themedSections = document.querySelectorAll('[data-theme]');
+  themedSections.forEach((section) => {
+    const theme = section.dataset.theme; // 'warm' or 'dark'
+    ScrollTrigger.create({
+      trigger: section,
+      start: 'top 60%',
+      end: 'bottom 40%',
+      onEnter: () => {
+        document.body.classList.remove('theme-warm', 'theme-dark');
+        document.body.classList.add('theme-' + theme);
+      },
+      onEnterBack: () => {
+        document.body.classList.remove('theme-warm', 'theme-dark');
+        document.body.classList.add('theme-' + theme);
+      },
+    });
+  });
+
+  // Reset to default dark when scrolling back to hero
+  ScrollTrigger.create({
+    trigger: '#hero',
+    start: 'top 60%',
+    onEnterBack: () => {
+      document.body.classList.remove('theme-warm', 'theme-dark');
+    },
+  });
+})();
+

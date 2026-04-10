@@ -18,110 +18,480 @@
   <link rel="stylesheet" href="css/style.css">
 
   <style>
+    /* ── CSS Custom Properties ──────────────────────────────────────────── */
+    :root {
+      --gold:        #D4AF37;
+      --gold-light:  #E8D48B;
+      --gold-dark:   #B8960F;
+      --bg:          #0a0a0a;
+      --bg-card:     #111111;
+      --text:        rgba(255,255,255,0.75);
+      --text-dim:    rgba(255,255,255,0.45);
+      --text-bright: rgba(255,255,255,0.92);
+      --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* ── Reading Progress Bar ──────────────────────────────────────────── */
+    .reading-progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 0%;
+      height: 3px;
+      background: linear-gradient(90deg, var(--gold-dark), var(--gold), var(--gold-light));
+      z-index: 9999;
+      transition: width 0.1s linear;
+      box-shadow: 0 0 10px rgba(212,175,55,0.4), 0 0 30px rgba(212,175,55,0.15);
+    }
+
+    /* ── Grain Overlay ─────────────────────────────────────────────────── */
+    .legal-grain {
+      position: fixed;
+      inset: -50%;
+      width: 200%;
+      height: 200%;
+      pointer-events: none;
+      opacity: 0.035;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 256px 256px;
+      z-index: 1;
+      mix-blend-mode: overlay;
+      animation: grainDrift 8s steps(10) infinite;
+    }
+
+    @keyframes grainDrift {
+      0%, 100% { transform: translate(0, 0); }
+      10% { transform: translate(-5%, -10%); }
+      20% { transform: translate(-15%, 5%); }
+      30% { transform: translate(7%, -25%); }
+      40% { transform: translate(-5%, 25%); }
+      50% { transform: translate(-15%, 10%); }
+      60% { transform: translate(15%, 0%); }
+      70% { transform: translate(0%, 15%); }
+      80% { transform: translate(3%, 35%); }
+      90% { transform: translate(-10%, 10%); }
+    }
+
+    /* ── Legal Page Layout ─────────────────────────────────────────────── */
     .legal-page {
-      padding: 160px 24px 80px;
-      max-width: 860px;
+      padding: 160px 24px 100px;
+      max-width: 880px;
       margin: 0 auto;
       min-height: 100vh;
+      position: relative;
+      z-index: 2;
     }
+
+    /* ── Title & Meta ──────────────────────────────────────────────────── */
     .legal-page h1 {
       font-family: 'Space Grotesk', sans-serif;
-      font-size: clamp(2rem, 5vw, 3rem);
+      font-size: clamp(2.2rem, 5vw, 3.5rem);
       font-weight: 700;
-      color: #D4AF37;
+      color: var(--gold);
       margin-bottom: 8px;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
     }
+
     .legal-page .legal-updated {
-      color: rgba(255,255,255,0.5);
+      color: var(--text-dim);
       font-size: 0.9rem;
-      margin-bottom: 48px;
+      margin-bottom: 56px;
+      font-family: 'Inter', sans-serif;
+      letter-spacing: 0.02em;
     }
+
+    /* ── Glassmorphism TOC Card ─────────────────────────────────────────── */
+    .legal-page .legal-toc {
+      background: rgba(212,175,55,0.04);
+      border: 1px solid rgba(212,175,55,0.1);
+      border-radius: 16px;
+      padding: 32px 36px;
+      margin-bottom: 64px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.4s ease, box-shadow 0.4s ease;
+    }
+
+    .legal-page .legal-toc::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(212,175,55,0.06) 0%, transparent 50%, rgba(212,175,55,0.03) 100%);
+      pointer-events: none;
+    }
+
+    .legal-page .legal-toc:hover {
+      border-color: rgba(212,175,55,0.3);
+      box-shadow: 0 0 40px rgba(212,175,55,0.08), 0 0 80px rgba(212,175,55,0.04);
+    }
+
+    .legal-page .legal-toc h3 {
+      margin-top: 0;
+      color: var(--gold);
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .legal-page .legal-toc ol {
+      margin-bottom: 0;
+      columns: 2;
+      column-gap: 32px;
+    }
+
+    .legal-page .legal-toc li {
+      margin-bottom: 6px;
+      font-size: 0.92rem;
+      break-inside: avoid;
+    }
+
+    .legal-page .legal-toc a {
+      color: var(--text);
+      text-decoration: none;
+      transition: color 0.3s ease, padding-left 0.3s var(--ease-out);
+      display: inline-block;
+      position: relative;
+    }
+
+    .legal-page .legal-toc a::before {
+      content: '';
+      position: absolute;
+      left: -12px;
+      top: 50%;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--gold);
+      transform: translateY(-50%) scale(0);
+      transition: transform 0.3s var(--ease-spring);
+    }
+
+    .legal-page .legal-toc a:hover,
+    .legal-page .legal-toc a.active {
+      color: var(--gold);
+      padding-left: 8px;
+    }
+
+    .legal-page .legal-toc a:hover::before,
+    .legal-page .legal-toc a.active::before {
+      transform: translateY(-50%) scale(1);
+    }
+
+    .legal-page .legal-toc a.active {
+      font-weight: 600;
+    }
+
+    /* ── Section Styles ────────────────────────────────────────────────── */
+    .legal-section {
+      position: relative;
+      padding-left: 28px;
+      margin-bottom: 24px;
+      clip-path: inset(0 0 100% 0);
+      opacity: 0;
+    }
+
+    .legal-section.is-visible {
+      clip-path: inset(0 0 0% 0);
+      opacity: 1;
+    }
+
+    /* Gold accent line on left */
+    .legal-section::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 2px;
+      height: 0%;
+      background: linear-gradient(180deg, var(--gold), rgba(212,175,55,0.1));
+      border-radius: 1px;
+      transition: height 1s var(--ease-out) 0.3s;
+    }
+
+    .legal-section.is-visible::before {
+      height: 100%;
+    }
+
+    /* ── Section Headings ──────────────────────────────────────────────── */
     .legal-page h2 {
       font-family: 'Space Grotesk', sans-serif;
       font-size: 1.5rem;
       font-weight: 600;
       color: #fff;
       margin-top: 48px;
-      margin-bottom: 16px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid rgba(212,175,55,0.15);
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      position: relative;
+      letter-spacing: -0.02em;
     }
+
+    .legal-page h2::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0;
+      height: 1px;
+      background: linear-gradient(90deg, var(--gold), transparent);
+      transition: width 0.8s var(--ease-out) 0.4s;
+    }
+
+    .legal-section.is-visible h2::after {
+      width: 100%;
+    }
+
     .legal-page h3 {
       font-family: 'Space Grotesk', sans-serif;
       font-size: 1.15rem;
       font-weight: 600;
-      color: rgba(255,255,255,0.9);
-      margin-top: 32px;
-      margin-bottom: 12px;
+      color: var(--text-bright);
+      margin-top: 36px;
+      margin-bottom: 14px;
+      letter-spacing: -0.01em;
     }
+
+    /* ── Premium Typography ────────────────────────────────────────────── */
     .legal-page p,
     .legal-page li {
       font-family: 'Inter', sans-serif;
       font-size: 1rem;
-      line-height: 1.8;
-      color: rgba(255,255,255,0.7);
-      margin-bottom: 16px;
+      line-height: 1.9;
+      color: var(--text);
+      margin-bottom: 18px;
     }
+
     .legal-page ul,
     .legal-page ol {
       padding-left: 24px;
-      margin-bottom: 16px;
+      margin-bottom: 20px;
     }
+
     .legal-page li {
-      margin-bottom: 8px;
+      margin-bottom: 10px;
+      position: relative;
     }
+
+    .legal-page li strong {
+      color: var(--text-bright);
+    }
+
     .legal-page a {
-      color: #D4AF37;
+      color: var(--gold);
       text-decoration: underline;
       text-underline-offset: 3px;
+      text-decoration-color: rgba(212,175,55,0.3);
+      transition: color 0.3s ease, text-decoration-color 0.3s ease;
     }
+
     .legal-page a:hover {
-      color: #f0d060;
+      color: var(--gold-light);
+      text-decoration-color: var(--gold-light);
     }
-    .legal-page .legal-toc {
-      background: rgba(212,175,55,0.05);
-      border: 1px solid rgba(212,175,55,0.12);
-      border-radius: 12px;
-      padding: 24px 32px;
-      margin-bottom: 48px;
+
+    /* ── Section Divider Dots ──────────────────────────────────────────── */
+    .legal-section + .legal-section::after {
+      content: '';
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 4px;
+      background-image: radial-gradient(circle, var(--gold) 1.5px, transparent 1.5px);
+      background-size: 20px 4px;
+      background-repeat: repeat-x;
+      opacity: 0.4;
     }
-    .legal-page .legal-toc h3 {
-      margin-top: 0;
-      color: #D4AF37;
-      font-size: 1rem;
-    }
-    .legal-page .legal-toc ol {
-      margin-bottom: 0;
-    }
-    .legal-page .legal-toc li {
-      margin-bottom: 4px;
-      font-size: 0.95rem;
-    }
-    .legal-section {
+
+    /* ── Staggered List Items ──────────────────────────────────────────── */
+    .legal-section li {
       opacity: 0;
-      transform: translateY(20px);
+      transform: translateX(-12px);
+    }
+
+    .legal-section.is-visible li {
+      animation: listItemReveal 0.5s var(--ease-out) forwards;
+    }
+
+    .legal-section.is-visible li:nth-child(1) { animation-delay: 0.1s; }
+    .legal-section.is-visible li:nth-child(2) { animation-delay: 0.15s; }
+    .legal-section.is-visible li:nth-child(3) { animation-delay: 0.2s; }
+    .legal-section.is-visible li:nth-child(4) { animation-delay: 0.25s; }
+    .legal-section.is-visible li:nth-child(5) { animation-delay: 0.3s; }
+    .legal-section.is-visible li:nth-child(6) { animation-delay: 0.35s; }
+    .legal-section.is-visible li:nth-child(7) { animation-delay: 0.4s; }
+    .legal-section.is-visible li:nth-child(8) { animation-delay: 0.45s; }
+    .legal-section.is-visible li:nth-child(9) { animation-delay: 0.5s; }
+    .legal-section.is-visible li:nth-child(10) { animation-delay: 0.55s; }
+
+    @keyframes listItemReveal {
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    /* ── Back to Top Button ────────────────────────────────────────────── */
+    .back-to-top {
+      position: fixed;
+      bottom: 32px;
+      right: 32px;
+      z-index: 90;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: rgba(10,10,10,0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(212,175,55,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0;
+      transform: translateY(20px) scale(0.8);
+      pointer-events: none;
+      transition: opacity 0.4s var(--ease-out),
+                  transform 0.4s var(--ease-out),
+                  border-color 0.3s,
+                  box-shadow 0.3s;
+    }
+
+    .back-to-top.visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: all;
+    }
+
+    .back-to-top:hover {
+      border-color: var(--gold);
+      box-shadow: 0 0 20px rgba(212,175,55,0.25), 0 4px 16px rgba(0,0,0,0.4);
+      transform: translateY(-4px) scale(1.05);
+    }
+
+    .back-to-top:active {
+      transform: translateY(0) scale(0.95);
+    }
+
+    .btt-circle {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .btt-track { opacity: 0.3; }
+
+    .btt-progress {
+      transition: stroke-dashoffset 0.1s linear;
+    }
+
+    .btt-arrow {
+      position: relative;
+      z-index: 1;
+      transition: transform 0.3s var(--ease-spring);
+    }
+
+    .back-to-top:hover .btt-arrow {
+      transform: translateY(-3px);
+    }
+
+    .back-to-top.visible::after {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 1px solid var(--gold);
+      animation: btt-ring 1.5s ease-out forwards;
+      pointer-events: none;
+    }
+
+    @keyframes btt-ring {
+      0% { transform: scale(1); opacity: 0.6; }
+      100% { transform: scale(1.6); opacity: 0; }
+    }
+
+    /* ── Responsive ────────────────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .legal-page {
+        padding: 130px 18px 80px;
+      }
+
+      .legal-page .legal-toc ol {
+        columns: 1;
+      }
+
+      .legal-page .legal-toc {
+        padding: 24px 24px;
+      }
+
+      .legal-section {
+        padding-left: 20px;
+      }
+
+      .back-to-top {
+        bottom: 20px;
+        right: 20px;
+        width: 42px;
+        height: 42px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .legal-page h1 {
+        font-size: 1.8rem;
+      }
+
+      .legal-page h2 {
+        font-size: 1.3rem;
+      }
+    }
+
+    /* ── Reduced Motion ────────────────────────────────────────────────── */
+    @media (prefers-reduced-motion: reduce) {
+      .legal-grain { animation: none; opacity: 0.02; }
+      .legal-section { clip-path: none; opacity: 1; }
+      .legal-section::before { height: 100%; transition: none; }
+      .legal-section li { opacity: 1; transform: none; animation: none !important; }
+      .legal-page h2::after { width: 100%; transition: none; }
+      .reading-progress { transition: none; }
     }
   </style>
 </head>
 <body>
-  <!-- Gradient mesh background -->
+  <div class="scroll-progress"></div>
   <div class="gradient-bg"></div>
+  <div id="cursor" class="cursor"></div>
+  <div id="cursor-trail" class="cursor-trail"></div>
+  <div class="legal-grain"></div>
+
+  <!-- Reading progress bar -->
+  <div class="reading-progress" id="readingProgress"></div>
 
   <!-- Navigation -->
   <nav id="nav" class="nav">
     <div class="nav-inner">
-      <a href="index.html" class="nav-logo">
+      <a href="index.html" class="nav-logo" data-magnetic>
         <img src="assets/images/sikani_logo_icon.jpeg" alt="Sikani" class="nav-logo-img">
         <span class="nav-logo-text">SIKANI</span>
       </a>
       <div class="nav-links">
-        <a href="index.html" class="nav-link">Home</a>
-        <a href="index.html#about" class="nav-link">About</a>
-        <a href="index.html#product" class="nav-link">Product</a>
-        <a href="blog.html" class="nav-link">Blog</a>
+        <a href="index.html#about" class="nav-link" data-magnetic>About</a>
+        <a href="index.html#product" class="nav-link" data-magnetic>Product</a>
+        <a href="index.html#features" class="nav-link" data-magnetic>Features</a>
+        <a href="index.html#how-it-works" class="nav-link" data-magnetic>How it works</a>
+        <a href="index.html#security" class="nav-link" data-magnetic>Security</a>
       </div>
       <div class="nav-actions">
-        <a href="index.html#download" class="nav-cta">
+        <a href="index.html#download" class="nav-cta" data-magnetic>
           <span>Get Started</span>
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 7h12M8 2l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </a>
@@ -135,10 +505,11 @@
   <!-- Mobile menu -->
   <div id="mobileMenu" class="mobile-menu">
     <div class="mobile-menu-inner">
-      <a href="index.html" class="mobile-link">Home</a>
       <a href="index.html#about" class="mobile-link">About</a>
       <a href="index.html#product" class="mobile-link">Product</a>
-      <a href="blog.html" class="mobile-link">Blog</a>
+      <a href="index.html#features" class="mobile-link">Features</a>
+      <a href="index.html#how-it-works" class="mobile-link">How it works</a>
+      <a href="index.html#security" class="mobile-link">Security</a>
       <a href="index.html#download" class="mobile-link cta">Get Started</a>
     </div>
   </div>
@@ -474,6 +845,17 @@
     </section>
   </main>
 
+  <!-- Back to top button with progress ring -->
+  <button id="backToTop" class="back-to-top" aria-label="Back to top">
+    <svg class="btt-circle" viewBox="0 0 48 48">
+      <circle class="btt-track" cx="24" cy="24" r="22" fill="none" stroke="rgba(212,175,55,0.15)" stroke-width="2"/>
+      <circle class="btt-progress" cx="24" cy="24" r="22" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-dasharray="138.23" stroke-dashoffset="138.23" transform="rotate(-90 24 24)"/>
+    </svg>
+    <svg class="btt-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path d="M8 13V3M3 7l5-5 5 5" stroke="#D4AF37" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+
   <!-- Footer -->
   <footer class="footer">
     <div class="container">
@@ -494,8 +876,8 @@
           <div class="footer-col">
             <h5>Company</h5>
             <a href="index.html#about">About Us</a>
-            <a href="mailto:careers@sikani.tech">Careers</a>
-            <a href="mailto:legal@sikani.tech">Contact</a>
+            <a href="careers.html">Careers</a>
+            <a href="mailto:info@sikani.tech">Contact</a>
             <a href="blog.html">Blog</a>
           </div>
           <div class="footer-col">
@@ -509,6 +891,7 @@
       </div>
       <div class="footer-bottom">
         <p>&copy; 2026 Sikani Technologies Pty Ltd. All rights reserved.</p>
+        <p class="footer-partner">A <a href="https://midaspathsoftwaresolutions.com" target="_blank" rel="noopener">Midas Path Software Solutions</a> partner product</p>
       </div>
     </div>
   </footer>
@@ -516,42 +899,141 @@
   <!-- Scripts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollToPlugin.min.js"></script>
+  <script src="https://unpkg.com/lenis@1.1.13/dist/lenis.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/velocity/2.0.6/velocity.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="js/shared.js"></script>
+  <script src="js/shader-bg.js"></script>
   <script>
-    // GSAP scroll animations for legal sections
-    gsap.registerPlugin(ScrollTrigger);
 
-    gsap.utils.toArray('.legal-section').forEach((section, i) => {
-      gsap.to(section, {
-        opacity: 1,
-        y: 0,
-        duration: 0.8,
-        ease: 'power2.out',
-        scrollTrigger: {
-          trigger: section,
-          start: 'top 85%',
-          toggleActions: 'play none none none'
-        },
-        delay: i * 0.05
+    // ── Reading Progress Bar ──────────────────────────────────────────
+    const progressBar = document.getElementById('readingProgress');
+    const updateProgress = () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+      progressBar.style.width = progress + '%';
+    };
+    window.addEventListener('scroll', updateProgress, { passive: true });
+
+    // ── Back to Top Button with Progress Ring ─────────────────────────
+    const backToTop = document.getElementById('backToTop');
+    const bttProgress = backToTop.querySelector('.btt-progress');
+    const bttCircumference = 138.23;
+    let bttShown = false;
+
+    const updateBackToTop = () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = docHeight > 0 ? scrollTop / docHeight : 0;
+
+      // Show/hide
+      if (scrollTop > 400 && !bttShown) {
+        backToTop.classList.add('visible');
+        bttShown = true;
+      } else if (scrollTop <= 400 && bttShown) {
+        backToTop.classList.remove('visible');
+        bttShown = false;
+      }
+
+      // Progress ring
+      bttProgress.style.strokeDashoffset = bttCircumference - (progress * bttCircumference);
+    };
+
+    window.addEventListener('scroll', updateBackToTop, { passive: true });
+    backToTop.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // ── Scroll-spy Active TOC Highlighting ────────────────────────────
+    const tocLinks = document.querySelectorAll('.legal-toc a');
+    const sections = document.querySelectorAll('.legal-section');
+    const sectionIds = Array.from(sections).map(s => s.id);
+
+    const updateTocHighlight = () => {
+      const scrollPos = window.scrollY + 200;
+      let currentId = '';
+
+      sections.forEach(section => {
+        if (section.offsetTop <= scrollPos) {
+          currentId = section.id;
+        }
+      });
+
+      tocLinks.forEach(link => {
+        const href = link.getAttribute('href').substring(1);
+        if (href === currentId) {
+          link.classList.add('active');
+        } else {
+          link.classList.remove('active');
+        }
+      });
+    };
+
+    window.addEventListener('scroll', updateTocHighlight, { passive: true });
+
+    // ── Smooth Scroll for TOC Links ───────────────────────────────────
+    tocLinks.forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const targetId = link.getAttribute('href').substring(1);
+        const target = document.getElementById(targetId);
+        if (target) {
+          const offset = target.offsetTop - 100;
+          window.scrollTo({ top: offset, behavior: 'smooth' });
+        }
       });
     });
 
-    // Mobile menu toggle
-    const menuBtn = document.getElementById('menuBtn');
-    const mobileMenu = document.getElementById('mobileMenu');
-    if (menuBtn && mobileMenu) {
-      menuBtn.addEventListener('click', () => {
-        menuBtn.classList.toggle('active');
-        mobileMenu.classList.toggle('active');
-        document.body.classList.toggle('menu-open');
+    // ── GSAP Clip-Path Section Reveals ────────────────────────────────
+    sections.forEach((section) => {
+      gsap.to(section, {
+        clipPath: 'inset(0 0 0% 0)',
+        opacity: 1,
+        duration: 1,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: section,
+          start: 'top 85%',
+          toggleActions: 'play none none none',
+          onEnter: () => section.classList.add('is-visible')
+        }
       });
-      mobileMenu.querySelectorAll('.mobile-link').forEach(link => {
-        link.addEventListener('click', () => {
-          menuBtn.classList.remove('active');
-          mobileMenu.classList.remove('active');
-          document.body.classList.remove('menu-open');
+    });
+
+    // ── Staggered List Item Reveals ───────────────────────────────────
+    sections.forEach((section) => {
+      const items = section.querySelectorAll('li');
+      if (items.length > 0) {
+        gsap.to(items, {
+          opacity: 1,
+          x: 0,
+          duration: 0.5,
+          stagger: 0.05,
+          ease: 'power2.out',
+          scrollTrigger: {
+            trigger: section,
+            start: 'top 80%',
+            toggleActions: 'play none none none'
+          }
         });
-      });
-    }
+      }
+    });
+
+    // ── TOC Card Entrance ─────────────────────────────────────────────
+    gsap.from('.legal-toc', {
+      opacity: 0,
+      y: 30,
+      duration: 0.8,
+      ease: 'power2.out',
+      scrollTrigger: {
+        trigger: '.legal-toc',
+        start: 'top 90%',
+        toggleActions: 'play none none none'
+      }
+    });
+
   </script>
 </body>
 </html>
