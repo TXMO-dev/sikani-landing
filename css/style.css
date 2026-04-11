@@ -4097,6 +4097,401 @@ button { cursor: none; border: none; background: none; font: inherit; color: inh
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   TESTIMONIALS — Awwwards-tier carousel
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.testimonials {
+  position: relative;
+  padding: 120px 0;
+  overflow: hidden;
+  background: linear-gradient(180deg, var(--bg) 0%, rgba(212,175,55,0.02) 50%, var(--bg) 100%);
+}
+
+.testimonials-grain {
+  position: absolute;
+  inset: -50%;
+  width: 200%;
+  height: 200%;
+  pointer-events: none;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 256px 256px;
+  mix-blend-mode: overlay;
+  animation: grainDrift 8s steps(10) infinite;
+  z-index: 0;
+}
+
+.testimonial-particles {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.testimonials .container {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ── Horizontal auto-scroll carousel ──────────────────────────────────── */
+.testimonial-carousel {
+  margin-top: 56px;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+
+.testimonial-track {
+  display: flex;
+  gap: 24px;
+  width: max-content;
+  animation: testimonialScroll 40s linear infinite;
+  will-change: transform;
+}
+
+.testimonial-track:hover,
+.testimonial-track.paused {
+  animation-play-state: paused;
+}
+
+@keyframes testimonialScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.testimonial-card {
+  flex: 0 0 420px;
+  padding: 40px 36px;
+  background: rgba(17, 17, 17, 0.6);
+  border: 1px solid rgba(212, 175, 55, 0.1);
+  border-radius: 24px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.4s ease, transform 0.4s ease;
+  /* Gold accent line at top */
+  border-top: 2px solid rgba(212, 175, 55, 0.25);
+}
+
+.testimonial-card:hover {
+  border-color: rgba(212, 175, 55, 0.3);
+  border-top-color: var(--gold);
+  transform: translateY(-4px);
+}
+
+/* Card texture overlay */
+.testimonial-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 24px;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 128px 128px;
+  mix-blend-mode: overlay;
+}
+
+/* Gold shimmer sweep on hover */
+.testimonial-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 24px;
+  pointer-events: none;
+  z-index: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(212,175,55,0.04) 45%,
+    rgba(212,175,55,0.08) 50%,
+    rgba(212,175,55,0.04) 55%,
+    transparent 60%
+  );
+  background-size: 250% 100%;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.testimonial-card:hover::after {
+  opacity: 1;
+  animation: cardShimmer 1.5s ease-in-out forwards;
+}
+
+/* Card content above overlays */
+.testimonial-stars,
+.testimonial-quote,
+.testimonial-author {
+  position: relative;
+  z-index: 2;
+}
+
+@keyframes cardShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -100% 0; }
+}
+
+/* Infinite shutter sweep — gold venetian-blind light passes over card */
+.testimonial-card .testimonial-shutter {
+  position: absolute;
+  inset: 0;
+  border-radius: 24px;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.testimonial-shutter::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 5px,
+    rgba(212, 175, 55, 0.04) 5px,
+    rgba(212, 175, 55, 0.04) 7px
+  );
+  clip-path: inset(100% 0 0 0);
+  animation: shutterSweep 6s ease-in-out infinite;
+}
+
+.testimonial-card:nth-child(2) .testimonial-shutter::after { animation-delay: 1.2s; }
+.testimonial-card:nth-child(3) .testimonial-shutter::after { animation-delay: 2.4s; }
+.testimonial-card:nth-child(4) .testimonial-shutter::after { animation-delay: 3.6s; }
+.testimonial-card:nth-child(5) .testimonial-shutter::after { animation-delay: 4.8s; }
+/* Duplicated set for infinite scroll */
+.testimonial-card:nth-child(7) .testimonial-shutter::after { animation-delay: 0.6s; }
+.testimonial-card:nth-child(8) .testimonial-shutter::after { animation-delay: 1.8s; }
+.testimonial-card:nth-child(9) .testimonial-shutter::after { animation-delay: 3s; }
+.testimonial-card:nth-child(10) .testimonial-shutter::after { animation-delay: 4.2s; }
+
+@keyframes shutterSweep {
+  0%, 100% { clip-path: inset(100% 0 0 0); opacity: 0; }
+  10% { clip-path: inset(80% 0 0 0); opacity: 1; }
+  50% { clip-path: inset(0% 0 0 0); opacity: 1; }
+  90% { clip-path: inset(0 0 80% 0); opacity: 1; }
+  95% { clip-path: inset(0 0 100% 0); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .testimonial-shutter::after { animation: none; }
+}
+
+/* Gold accent line at top */
+.testimonial-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  border-radius: 2px;
+}
+
+/* Subtle glow on hover */
+.testimonial-card::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 24px;
+  border: 1px solid transparent;
+  pointer-events: none;
+  transition: border-color 0.5s ease;
+}
+
+.testimonial-card:hover::after {
+  border-color: rgba(212, 175, 55, 0.2);
+}
+
+/* ── Stars ─────────────────────────────────────────────────────────────── */
+.testimonial-stars {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 24px;
+}
+
+.testimonial-stars span {
+  color: var(--gold);
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* ── Quote ─────────────────────────────────────────────────────────────── */
+.testimonial-quote {
+  font-family: var(--font-body);
+  font-size: 1.15rem;
+  line-height: 1.9;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 300;
+  font-style: italic;
+  margin-bottom: 32px;
+  position: relative;
+  padding-left: 20px;
+  border-left: 2px solid rgba(212, 175, 55, 0.2);
+}
+
+.testimonial-quote::before {
+  content: '\201C';
+  position: absolute;
+  top: -8px;
+  left: -4px;
+  font-family: Georgia, serif;
+  font-size: 48px;
+  color: var(--gold);
+  opacity: 0.3;
+  line-height: 1;
+}
+
+.testimonial-quote::after {
+  content: '\201D';
+  font-family: Georgia, serif;
+  font-size: 48px;
+  color: var(--gold);
+  opacity: 0.3;
+  line-height: 1;
+  vertical-align: -0.3em;
+  margin-left: 4px;
+}
+
+/* ── Author ────────────────────────────────────────────────────────────── */
+.testimonial-author {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.testimonial-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(212, 175, 55, 0.3);
+  flex-shrink: 0;
+  box-shadow: 0 0 16px rgba(212, 175, 55, 0.15);
+  transition: border-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+.testimonial-card:hover .testimonial-avatar {
+  border-color: rgba(212, 175, 55, 0.6);
+  box-shadow: 0 0 24px rgba(212, 175, 55, 0.25);
+}
+
+/* Big decorative quote mark */
+.testimonial-big-quote {
+  position: absolute;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(200px, 25vw, 360px);
+  line-height: 1;
+  color: rgba(212, 175, 55, 0.03);
+  pointer-events: none;
+  z-index: 1;
+  user-select: none;
+}
+
+/* Verified badge */
+.testimonial-verified {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  padding: 4px 10px;
+  border-radius: 100px;
+  background: rgba(212, 175, 55, 0.06);
+  border: 1px solid rgba(212, 175, 55, 0.12);
+}
+
+.testimonial-verified span {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--gold);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.testimonial-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.testimonial-info strong {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.testimonial-info span {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* ── Scroll hint ───────────────────────────────────────────────────────── */
+.testimonial-hint {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 32px auto 0;
+  padding: 8px 18px;
+  border-radius: 100px;
+  border: 1px solid rgba(212, 175, 55, 0.1);
+  background: rgba(212, 175, 55, 0.03);
+  color: rgba(255, 255, 255, 0.3);
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  width: fit-content;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.testimonial-hint:hover {
+  color: var(--gold);
+  border-color: rgba(212, 175, 55, 0.3);
+  background: rgba(212, 175, 55, 0.08);
+}
+
+
+/* ── Responsive ────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .testimonials { padding: 80px 0; }
+  .testimonial-card { flex: 0 0 320px; padding: 28px 20px; border-radius: 20px; }
+  .testimonial-quote { font-size: 0.9rem; padding-left: 14px; }
+  .testimonial-quote::before { font-size: 32px; }
+  .testimonial-quote::after { font-size: 32px; }
+  .testimonial-particles { display: none; }
+  .testimonials-grain { animation: none; }
+  .testimonial-carousel { margin-top: 36px; }
+  .testimonial-track { gap: 16px; animation-duration: 30s; }
+  .testimonial-big-quote { font-size: 160px; }
+  .testimonial-verified { display: none; }
+  .testimonial-hint { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .testimonial-track { transition: none; }
+  .testimonials-grain { animation: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    SCROLL COLOR SHIFT — body bg transitions between sections
    ═══════════════════════════════════════════════════════════════════════════ */
 body {

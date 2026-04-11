@@ -3776,3 +3776,201 @@ if (!prefersReducedMotion && typeof Pts !== 'undefined') {
   });
 })();
 
+// ══════════════════════════════════════════════════════════════════════════
+// TESTIMONIALS — Carousel + particles + anime.js entrance
+// ══════════════════════════════════════════════════════════════════════════
+(function initTestimonials() {
+  const track = document.getElementById('testimonialTrack');
+  const cards = document.querySelectorAll('[data-testimonial]');
+  if (!track || !cards.length) return;
+
+  // Hover to pause badge
+  const hint = document.querySelector('.testimonial-hint');
+  if (hint) {
+    hint.addEventListener('mouseenter', () => track.classList.add('paused'));
+    hint.addEventListener('mouseleave', () => track.classList.remove('paused'));
+  }
+
+  // Add shutter overlay to each card
+  cards.forEach((card) => {
+    const shutter = document.createElement('div');
+    shutter.className = 'testimonial-shutter';
+    card.appendChild(shutter);
+  });
+
+  // Duplicate cards for seamless infinite scroll
+  const originalHTML = track.innerHTML;
+  track.innerHTML = originalHTML + originalHTML;
+
+  // Scroll-triggered entrance — stagger cards in with anime.js
+  ScrollTrigger.create({
+    trigger: '#testimonials',
+    start: 'top 80%',
+    once: true,
+    onEnter: () => {
+      if (typeof anime !== 'undefined') {
+        // Stars spring-pop across all visible cards
+        anime({
+          targets: '#testimonialTrack .testimonial-stars span',
+          scale: [0, 1],
+          opacity: [0, 1],
+          easing: 'spring(1, 80, 10, 0)',
+          delay: anime.stagger(40),
+        });
+
+        // Cards fade in with stagger
+        anime({
+          targets: '#testimonialTrack .testimonial-card',
+          opacity: [0, 1],
+          translateY: [30, 0],
+          easing: 'easeOutExpo',
+          duration: 800,
+          delay: anime.stagger(100),
+        });
+
+        // Avatars pop in
+        anime({
+          targets: '#testimonialTrack .testimonial-avatar',
+          scale: [0, 1],
+          easing: 'spring(1, 70, 12, 0)',
+          delay: anime.stagger(120, { start: 300 }),
+        });
+      }
+    },
+  });
+
+  // Matter.js physics shapes (desktop only) — gold stars & circles floating
+  if (!isMobile && !prefersReducedMotion && typeof Matter !== 'undefined') {
+    const canvas = document.getElementById('testimonialParticles');
+    const section = document.getElementById('testimonials');
+    if (canvas && section) {
+      const { Engine, Bodies, Composite, Runner } = Matter;
+      const ctx = canvas.getContext('2d');
+      let w, h;
+
+      function resizeCanvas() {
+        const rect = section.getBoundingClientRect();
+        w = canvas.width = rect.width;
+        h = canvas.height = rect.height;
+      }
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+
+      const engine = Engine.create({ gravity: { x: 0, y: 0.03 } });
+
+      // Walls (invisible)
+      const walls = [
+        Bodies.rectangle(w / 2, h + 30, w + 100, 60, { isStatic: true }),
+        Bodies.rectangle(-30, h / 2, 60, h + 100, { isStatic: true }),
+        Bodies.rectangle(w + 30, h / 2, 60, h + 100, { isStatic: true }),
+        Bodies.rectangle(w / 2, -30, w + 100, 60, { isStatic: true }),
+      ];
+      Composite.add(engine.world, walls);
+
+      // Gold physics shapes — mix of circles (coins) and polygons (stars)
+      const shapes = [];
+      const SHAPE_COUNT = 20;
+      for (let i = 0; i < SHAPE_COUNT; i++) {
+        const x = Math.random() * w;
+        const y = Math.random() * h * 0.6;
+        const isStar = i % 3 === 0;
+        const r = isStar ? (8 + Math.random() * 10) : (4 + Math.random() * 12);
+
+        const body = isStar
+          ? Bodies.polygon(x, y, 5, r, { restitution: 0.6, friction: 0.05, frictionAir: 0.02 })
+          : Bodies.circle(x, y, r, { restitution: 0.7, friction: 0.05, frictionAir: 0.015 });
+
+        body._shapeType = isStar ? 'star' : 'circle';
+        body._r = r;
+        body._alpha = 0.15 + Math.random() * 0.25;
+        shapes.push(body);
+      }
+      Composite.add(engine.world, shapes);
+
+      let isActive = false;
+      let runner;
+      let raf;
+
+      function drawPhysics() {
+        if (!isActive) return;
+        ctx.clearRect(0, 0, w, h);
+
+        for (const body of shapes) {
+          const { x, y } = body.position;
+          const a = body._alpha;
+          const r = body._r;
+
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.rotate(body.angle);
+
+          if (body._shapeType === 'star') {
+            // Draw 5-pointed star
+            ctx.beginPath();
+            for (let i = 0; i < 5; i++) {
+              const outerAngle = (Math.PI * 2 / 5) * i - Math.PI / 2;
+              const innerAngle = outerAngle + Math.PI / 5;
+              const ox = Math.cos(outerAngle) * r;
+              const oy = Math.sin(outerAngle) * r;
+              const ix = Math.cos(innerAngle) * r * 0.4;
+              const iy = Math.sin(innerAngle) * r * 0.4;
+              if (i === 0) ctx.moveTo(ox, oy);
+              else ctx.lineTo(ox, oy);
+              ctx.lineTo(ix, iy);
+            }
+            ctx.closePath();
+            ctx.fillStyle = `rgba(212, 175, 55, ${a * 0.4})`;
+            ctx.fill();
+            ctx.strokeStyle = `rgba(212, 175, 55, ${a * 0.6})`;
+            ctx.lineWidth = 0.8;
+            ctx.stroke();
+          } else {
+            // Circle (coin)
+            ctx.beginPath();
+            ctx.arc(0, 0, r, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(212, 175, 55, ${a * 0.3})`;
+            ctx.fill();
+            ctx.strokeStyle = `rgba(212, 175, 55, ${a * 0.5})`;
+            ctx.lineWidth = 0.6;
+            ctx.stroke();
+            // Inner ring
+            ctx.beginPath();
+            ctx.arc(0, 0, r * 0.6, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(212, 175, 55, ${a * 0.2})`;
+            ctx.lineWidth = 0.4;
+            ctx.stroke();
+          }
+
+          ctx.restore();
+        }
+        raf = requestAnimationFrame(drawPhysics);
+      }
+
+      ScrollTrigger.create({
+        trigger: section,
+        start: 'top bottom',
+        end: 'bottom top',
+        onEnter: () => {
+          if (!isActive) {
+            isActive = true;
+            resizeCanvas();
+            runner = Runner.create();
+            Runner.run(runner, engine);
+            raf = requestAnimationFrame(drawPhysics);
+          }
+        },
+        onLeave: () => { isActive = false; if (runner) Runner.stop(runner); cancelAnimationFrame(raf); },
+        onEnterBack: () => {
+          if (!isActive) {
+            isActive = true;
+            runner = Runner.create();
+            Runner.run(runner, engine);
+            raf = requestAnimationFrame(drawPhysics);
+          }
+        },
+        onLeaveBack: () => { isActive = false; if (runner) Runner.stop(runner); cancelAnimationFrame(raf); },
+      });
+    }
+  }
+})();
+
