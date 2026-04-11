@@ -564,8 +564,9 @@ function initAnimations() {
       scrollTrigger: {
         trigger: revealSection,
         start: 'top top',
-        end: isMobile ? '+=300%' : '+=200%',
+        end: isMobile ? '+=150%' : '+=200%',
         pin: true,
+        pinSpacing: true,
         scrub: isMobile ? 1 : 0.5,
         anticipatePin: 1,
       },
@@ -581,10 +582,10 @@ function initAnimations() {
         scale: 1,
         duration: 1,
         ease: 'power2.out',
-      }, i * (isMobile ? 1 : 0.6));
+      }, i * (isMobile ? 0.5 : 0.6));
     });
 
-    revealTl.to({}, { duration: isMobile ? 4 : 2 });
+    revealTl.to({}, { duration: isMobile ? 1.5 : 2 });
   }
 
   // ── Scroll Progress Indicator ────────────────────────────────────────
@@ -1706,14 +1707,22 @@ if (sellerRegForm) {
   if (!img) return;
 
   // Pool of high-quality African fintech / payments / business hero images
+  // Black / African people at point of sale — shops, payments, retail
   const HERO_POOL = [
-    'https://images.pexels.com/photos/6694482/pexels-photo-6694482.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=2',
-    'https://images.pexels.com/photos/7567236/pexels-photo-7567236.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=2',
-    'https://images.pexels.com/photos/7567535/pexels-photo-7567535.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=2',
-    'https://images.pexels.com/photos/7567606/pexels-photo-7567606.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=2',
+    // Cheerful Black female cashier behind counter — POS, retail
+    'https://images.pexels.com/photos/5049504/pexels-photo-5049504.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=2',
+    // Black man paying bill at grocery store — mobile payment
+    'https://images.pexels.com/photos/8475146/pexels-photo-8475146.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=2',
+    // Black person paying with bank card — POS terminal
+    'https://images.pexels.com/photos/8475156/pexels-photo-8475156.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=2',
+    // Black woman choosing food in grocery store — shopping
+    'https://images.pexels.com/photos/6097870/pexels-photo-6097870.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=2',
+    // Black woman buying groceries in convenience store
+    'https://images.pexels.com/photos/4177709/pexels-photo-4177709.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=2',
+    // Black woman shopping in grocery store
+    'https://images.pexels.com/photos/4971967/pexels-photo-4971967.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=2',
+    // Black male entrepreneur on smartphone — confident, urban
     'https://images.pexels.com/photos/5647280/pexels-photo-5647280.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=2',
-    'https://images.pexels.com/photos/4559704/pexels-photo-4559704.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=2',
-    'https://images.pexels.com/photos/7679884/pexels-photo-7679884.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=2',
   ];
 
   const src = HERO_POOL[Math.floor(Math.random() * HERO_POOL.length)];

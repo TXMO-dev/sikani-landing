@@ -1737,7 +1737,7 @@ button { cursor: none; border: none; background: none; font: inherit; color: inh
   .hero-stats { flex-wrap: wrap; gap: 20px; }
   .stat-divider { display: none; }
   .hero-title { letter-spacing: -1px; }
-  .text-reveal-section { padding: 80px 20px; min-height: 60vh; }
+  .text-reveal-section { padding: 60px 20px; min-height: 50vh; }
   .horizontal-section { padding: 80px 0; }
   .phone-showcase { padding: 40px 16px; }
 }
@@ -2308,6 +2308,7 @@ button { cursor: none; border: none; background: none; font: inherit; color: inh
   justify-content: space-between;
   align-items: center;
   gap: 12px;
+  margin-top: 8px;
   margin-top: 24px;
 }
 
@@ -2321,6 +2322,7 @@ button { cursor: none; border: none; background: none; font: inherit; color: inh
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-top: 8px;
   margin-left: auto;
 }
 
@@ -2447,6 +2449,7 @@ button { cursor: none; border: none; background: none; font: inherit; color: inh
   display: flex;
   flex-direction: column;
   gap: 6px;
+  margin-bottom: 16px;
 }
 
 .reg-field label {
@@ -2780,6 +2783,7 @@ button { cursor: none; border: none; background: none; font: inherit; color: inh
   background: rgba(212,175,55,0.06);
   border-radius: 12px;
   border: 1px solid var(--border);
+  overflow: visible;
 }
 
 .feature-anim-icon {
