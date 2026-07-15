@@ -864,44 +864,21 @@
     <div class="nfc-scene" role="button" aria-label="Flip Sikani NFC card to see back">
       <div class="nfc-card">
 
-        <!-- FRONT — Yellow (matches real card: black logo + SIKANI, NFC top-right) -->
+        <!-- FRONT — Black card -->
         <div class="nfc-card-front">
-          <!-- Sikani icon + text top-left (black on yellow) -->
           <div class="card-logo">
-            <svg class="card-sikani-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <!-- 4 petals with circuit detail -->
-              <path d="M18 2C18 2 9 2 5.5 5.5C2 9 2 18 2 18C2 18 9 18 13.5 13.5C18 9 18 2 18 2Z" fill="#0a0a0a"/>
-              <path d="M22 2C22 2 31 2 34.5 5.5C38 9 38 18 38 18C38 18 31 18 26.5 13.5C22 9 22 2 22 2Z" fill="#0a0a0a"/>
-              <path d="M18 38C18 38 9 38 5.5 34.5C2 31 2 22 2 22C2 22 9 22 13.5 26.5C18 31 18 38 18 38Z" fill="#0a0a0a"/>
-              <path d="M22 38C22 38 31 38 34.5 34.5C38 31 38 22 38 22C38 22 31 22 26.5 26.5C22 31 22 38 22 38Z" fill="#0a0a0a"/>
-              <!-- Circuit eyes -->
-              <circle cx="9.5" cy="11" r="2.5" stroke="#D4AF37" stroke-width="1" fill="none"/>
-              <circle cx="9.5" cy="11" r="0.8" fill="#D4AF37"/>
-              <circle cx="30.5" cy="11" r="2.5" stroke="#D4AF37" stroke-width="1" fill="none"/>
-              <circle cx="30.5" cy="11" r="0.8" fill="#D4AF37"/>
-              <circle cx="9.5" cy="29" r="2.5" stroke="#D4AF37" stroke-width="1" fill="none"/>
-              <circle cx="9.5" cy="29" r="0.8" fill="#D4AF37"/>
-              <circle cx="30.5" cy="29" r="2.5" stroke="#D4AF37" stroke-width="1" fill="none"/>
-              <circle cx="30.5" cy="29" r="0.8" fill="#D4AF37"/>
-              <!-- Centre cross -->
-              <path d="M13.5 13.5L26.5 26.5M26.5 13.5L13.5 26.5" stroke="#D4AF37" stroke-width="1.5"/>
-              <circle cx="20" cy="20" r="2" fill="#D4AF37"/>
-            </svg>
+            <img src="assets/images/sikani_logo_icon.jpeg" alt="Sikani" class="card-logo-img">
             <span class="card-logo-text">SIKANI</span>
           </div>
-          <!-- NFC contactless icon top-right -->
           <div class="card-nfc">
             <svg class="card-nfc-icon" viewBox="0 0 24 24" fill="none">
-              <g transform="rotate(-90 12 12)">
-                <path d="M12 2C17.52 2 22 6.48 22 12" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round"/>
-                <path d="M12 6C15.31 6 18 8.69 18 12" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round"/>
-                <path d="M12 10C13.1 10 14 10.9 14 12" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round"/>
-                <circle cx="12" cy="12" r="1.5" fill="#0a0a0a"/>
-              </g>
+              <path d="M2 12C2 6.48 6.48 2 12 2" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+              <path d="M6 12C6 8.69 8.69 6 12 6" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+              <path d="M10 12C10 10.9 10.9 10 12 10" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="12" cy="12" r="1.5" fill="#fff"/>
             </svg>
             <span>NFC</span>
           </div>
-          <!-- Cardholder info bottom -->
           <div class="card-holder-front">
             <span class="card-holder-name">JOHN DOE</span>
             <span class="card-holder-id">SKN-2024-0001</span>
@@ -918,12 +895,10 @@
           <!-- NFC waves + text top-right (white) -->
           <div class="card-nfc">
             <svg class="card-nfc-icon" viewBox="0 0 24 24" fill="none">
-              <g transform="rotate(-90 12 12)">
-                <path d="M12 2C17.52 2 22 6.48 22 12" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-                <path d="M12 6C15.31 6 18 8.69 18 12" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-                <path d="M12 10C13.1 10 14 10.9 14 12" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-                <circle cx="12" cy="12" r="1.5" fill="#fff"/>
-              </g>
+              <path d="M2 12C2 6.48 6.48 2 12 2" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+              <path d="M6 12C6 8.69 8.69 6 12 6" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+              <path d="M10 12C10 10.9 10.9 10 12 10" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="12" cy="12" r="1.5" fill="#fff"/>
             </svg>
             <span>NFC</span>
           </div>
