@@ -4722,14 +4722,14 @@ body.theme-dark {
   transition: background .1s;
 }
 
-/* FRONT — Dark navy */
+/* FRONT — Black */
 .nfc-card-front {
-  background: linear-gradient(135deg, #0d1f35 0%, #1a3a5c 100%);
+  background: #000;
 }
 
-/* BACK — Navy */
+/* BACK — Black */
 .nfc-card-back {
-  background: linear-gradient(135deg, #0d1f35 0%, #1a3a5c 100%);
+  background: #000;
   transform: rotateY(180deg);
 }
 
