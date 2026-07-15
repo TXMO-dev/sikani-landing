@@ -4784,6 +4784,30 @@ body.theme-dark {
 .nfc-card-front .nfc-waves { stroke: #0a0a0a; }
 .nfc-card-back  .nfc-waves { stroke: rgba(255,255,255,.9); }
 
+/* ── Card holder info (bottom of front) ───────────────── */
+.card-holder-front {
+  position: absolute;
+  bottom: 22px;
+  left: 24px;
+  right: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+.card-holder-name {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #fff;
+  text-transform: uppercase;
+}
+.card-holder-id {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,.5);
+}
+
 
 
 
