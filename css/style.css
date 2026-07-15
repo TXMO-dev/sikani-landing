@@ -4722,9 +4722,9 @@ body.theme-dark {
   transition: background .1s;
 }
 
-/* FRONT — Black */
+/* FRONT — Yellow */
 .nfc-card-front {
-  background: #0a0a0a;
+  background: #D4AF37;
 }
 
 /* BACK — Navy */
@@ -4760,7 +4760,7 @@ body.theme-dark {
   font-weight: 900;
   letter-spacing: 2px;
 }
-.nfc-card-front .card-logo-text { color: #fff; }
+.nfc-card-front .card-logo-text { color: #0a0a0a; }
 .nfc-card-back  .card-logo-text { color: #fff; }
 
 .card-nfc {
@@ -4774,7 +4774,7 @@ body.theme-dark {
   font-weight: 700;
   letter-spacing: 1px;
 }
-.nfc-card-front .card-nfc { color: #fff; }
+.nfc-card-front .card-nfc { color: #0a0a0a; }
 .nfc-card-back  .card-nfc { color: #fff; }
 
 .card-nfc-icon {
@@ -4800,14 +4800,14 @@ body.theme-dark {
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 2px;
-  color: #fff;
+  color: #0a0a0a;
   text-transform: uppercase;
 }
 .card-holder-id {
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 1px;
-  color: rgba(255,255,255,.5);
+  color: rgba(10,10,10,.5);
 }
 
 
