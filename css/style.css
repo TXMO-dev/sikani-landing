@@ -4743,6 +4743,13 @@ body.theme-dark {
   gap: 10px;
 }
 
+.card-logo-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
 .card-logo-icon {
   width: 36px;
   height: 36px;
@@ -4800,7 +4807,7 @@ body.theme-dark {
 /* Chip on back */
 .card-chip {
   position: absolute;
-  bottom: 32px;
+  bottom: 48px;
   left: 28px;
   width: 42px;
   height: 32px;
@@ -4823,10 +4830,94 @@ body.theme-dark {
   height: 1px; transform: translateY(-50%);
 }
 
+/* ── Front card holder info ────────────────────────────── */
+.card-holder-front {
+  position: absolute;
+  bottom: 22px;
+  left: 24px;
+  right: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+.card-holder-name {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #0a0a0a;
+  text-transform: uppercase;
+}
+.card-holder-id {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: rgba(10,10,10,.5);
+}
+
+/* ── Back — magnetic stripe ────────────────────────────── */
+.card-magstripe {
+  position: absolute;
+  top: 24px;
+  left: 0;
+  right: 0;
+  height: 36px;
+  background: linear-gradient(180deg, #111 0%, #222 50%, #0a0a0a 100%);
+  box-shadow: 0 2px 4px rgba(0,0,0,.5);
+}
+
+/* Back — centred logo */
+.card-back-logo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: .12;
+}
+.card-back-logo-img {
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+/* Back — cardholder details */
+.card-back-details {
+  position: absolute;
+  bottom: 50px;
+  left: 80px;
+  display: flex;
+  gap: 24px;
+}
+.card-back-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.card-back-label {
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.4);
+}
+.card-back-value {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,.85);
+}
+
+/* Back NFC symbol position */
+.card-nfc-back {
+  top: auto;
+  bottom: 28px;
+  right: 28px;
+}
+
 /* Card tagline on back */
 .card-tagline {
   position: absolute;
-  bottom: 52px;
+  bottom: 12px;
   left: 28px;
   right: 90px;
   font-size: 9px;

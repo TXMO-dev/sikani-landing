@@ -864,57 +864,62 @@
     <div class="nfc-scene" role="button" aria-label="Flip Sikani NFC card to see back">
       <div class="nfc-card">
 
-        <!-- FRONT — Yellow -->
+        <!-- FRONT — Yellow (matches real card exactly) -->
         <div class="nfc-card-front">
-          <!-- Logo top-left -->
+          <!-- Logo top-left with actual Sikani logo -->
           <div class="card-logo">
-            <svg class="card-logo-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="10" cy="10" r="5" class="icon-fill-front"/>
-              <circle cx="30" cy="10" r="5" class="icon-fill-front"/>
-              <circle cx="10" cy="30" r="5" class="icon-fill-front"/>
-              <circle cx="30" cy="30" r="5" class="icon-fill-front"/>
-              <path d="M10 10 C10 20 20 20 20 20 C20 20 30 20 30 10" stroke="#0a0a0a" stroke-width="2" fill="none"/>
-              <path d="M10 30 C10 20 20 20 20 20 C20 20 30 20 30 30" stroke="#0a0a0a" stroke-width="2" fill="none"/>
-            </svg>
+            <img src="assets/images/sikani_logo_icon.jpeg" alt="Sikani" class="card-logo-img">
             <span class="card-logo-text">SIKANI</span>
           </div>
-          <!-- NFC top-right -->
+          <!-- NFC symbol top-right -->
           <div class="card-nfc">
             <svg class="card-nfc-icon" viewBox="0 0 24 24" fill="none">
-              <path d="M8 12 Q10 8 12 12 Q14 16 16 12" stroke="#0a0a0a" stroke-width="1.8" stroke-linecap="round" class="nfc-waves"/>
-              <path d="M5 12 Q8 5 12 12 Q16 19 19 12" stroke="#0a0a0a" stroke-width="1.5" stroke-linecap="round" class="nfc-waves" opacity=".6"/>
+              <path d="M6 18C6 12.5 10.5 8 16 8" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round"/>
+              <path d="M6 14C6 11.5 8.5 9 12 9" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round"/>
+              <path d="M6 10C7 10 8 9.5 8 9" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="6" cy="18" r="1.5" fill="#0a0a0a"/>
             </svg>
             <span>NFC</span>
+          </div>
+          <!-- Cardholder info bottom -->
+          <div class="card-holder-front">
+            <span class="card-holder-name">JOHN DOE</span>
+            <span class="card-holder-id">SKN-2024-0001</span>
           </div>
         </div>
 
-        <!-- BACK — Navy -->
+        <!-- BACK — Navy dark with gold accents -->
         <div class="nfc-card-back">
-          <!-- Logo top-left (gold on dark) -->
-          <div class="card-logo">
-            <svg class="card-logo-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="10" cy="10" r="5" class="icon-fill-back"/>
-              <circle cx="30" cy="10" r="5" class="icon-fill-back"/>
-              <circle cx="10" cy="30" r="5" class="icon-fill-back"/>
-              <circle cx="30" cy="30" r="5" class="icon-fill-back"/>
-              <path d="M10 10 C10 20 20 20 20 20 C20 20 30 20 30 10" stroke="#D4AF37" stroke-width="2" fill="none"/>
-              <path d="M10 30 C10 20 20 20 20 20 C20 20 30 20 30 30" stroke="#D4AF37" stroke-width="2" fill="none"/>
-            </svg>
-            <span class="card-logo-text">SIKANI</span>
+          <!-- Magnetic stripe -->
+          <div class="card-magstripe"></div>
+          <!-- Logo centred -->
+          <div class="card-back-logo">
+            <img src="assets/images/sikani_logo_icon.jpeg" alt="Sikani" class="card-back-logo-img">
           </div>
-          <!-- NFC icon top-right -->
-          <div class="card-nfc">
-            <svg class="card-nfc-icon" viewBox="0 0 24 24" fill="none">
-              <path d="M8 12 Q10 8 12 12 Q14 16 16 12" stroke="rgba(255,255,255,.9)" stroke-width="1.8" stroke-linecap="round" class="nfc-waves"/>
-              <path d="M5 12 Q8 5 12 12 Q16 19 19 12" stroke="rgba(255,255,255,.9)" stroke-width="1.5" stroke-linecap="round" class="nfc-waves" opacity=".6"/>
-            </svg>
-            <span>NFC</span>
-          </div>
-          <!-- Gold chip bottom-left -->
+          <!-- Gold EMV chip -->
           <div class="card-chip"></div>
+          <!-- Cardholder details -->
+          <div class="card-back-details">
+            <div class="card-back-row">
+              <span class="card-back-label">Card Holder</span>
+              <span class="card-back-value">John Doe</span>
+            </div>
+            <div class="card-back-row">
+              <span class="card-back-label">Valid Thru</span>
+              <span class="card-back-value">12/28</span>
+            </div>
+          </div>
+          <!-- NFC contactless symbol -->
+          <div class="card-nfc card-nfc-back">
+            <svg class="card-nfc-icon" viewBox="0 0 24 24" fill="none">
+              <path d="M6 18C6 12.5 10.5 8 16 8" stroke="rgba(212,175,55,.9)" stroke-width="2" stroke-linecap="round"/>
+              <path d="M6 14C6 11.5 8.5 9 12 9" stroke="rgba(212,175,55,.9)" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="6" cy="18" r="1.5" fill="rgba(212,175,55,.9)"/>
+            </svg>
+          </div>
           <!-- Tagline -->
           <p class="card-tagline">Scan · Pay · Done</p>
-          <!-- NFC pulse rings bottom-right -->
+          <!-- NFC pulse rings -->
           <div class="nfc-rings-wrap">
             <div class="nfc-ring"></div>
             <div class="nfc-ring"></div>
