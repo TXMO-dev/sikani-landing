@@ -4743,6 +4743,11 @@ body.theme-dark {
   gap: 10px;
 }
 
+.card-sikani-icon {
+  width: 40px;
+  height: 40px;
+}
+
 .card-logo-img {
   width: 36px;
   height: 36px;
@@ -4760,12 +4765,7 @@ body.theme-dark {
   font-weight: 900;
   letter-spacing: 2px;
 }
-.nfc-card-front .card-logo {
-  background: #0a0a0a;
-  padding: 6px 14px 6px 6px;
-  border-radius: 8px;
-}
-.nfc-card-front .card-logo-text { color: #fff; }
+.nfc-card-front .card-logo-text { color: #0a0a0a; }
 .nfc-card-back  .card-logo-text { color: #fff; }
 
 .card-nfc {
@@ -4789,47 +4789,7 @@ body.theme-dark {
 .nfc-card-front .nfc-waves { stroke: #0a0a0a; }
 .nfc-card-back  .nfc-waves { stroke: rgba(255,255,255,.9); }
 
-/* NFC pulse rings on back */
-.nfc-rings-wrap {
-  position: absolute;
-  bottom: 28px;
-  right: 28px;
-  width: 48px;
-  height: 48px;
-}
-.nfc-ring {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 1.5px solid rgba(212,175,55,.6);
-  transform-origin: center;
-}
 
-/* Chip on back */
-.card-chip {
-  position: absolute;
-  bottom: 48px;
-  left: 28px;
-  width: 42px;
-  height: 32px;
-  border-radius: 6px;
-  background: linear-gradient(135deg, #c8a84b 0%, #f0d060 40%, #b8932a 100%);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 2px 8px rgba(0,0,0,.4);
-}
-.card-chip::before,
-.card-chip::after {
-  content: '';
-  position: absolute;
-  background: rgba(0,0,0,.18);
-}
-.card-chip::before {
-  left: 50%; top: 0; bottom: 0;
-  width: 1px; transform: translateX(-50%);
-}
-.card-chip::after {
-  top: 50%; left: 0; right: 0;
-  height: 1px; transform: translateY(-50%);
-}
 
 /* ── Front card holder info ────────────────────────────── */
 .card-holder-front {
@@ -4855,78 +4815,7 @@ body.theme-dark {
   color: rgba(10,10,10,.5);
 }
 
-/* ── Back — magnetic stripe ────────────────────────────── */
-.card-magstripe {
-  position: absolute;
-  top: 24px;
-  left: 0;
-  right: 0;
-  height: 36px;
-  background: linear-gradient(180deg, #111 0%, #222 50%, #0a0a0a 100%);
-  box-shadow: 0 2px 4px rgba(0,0,0,.5);
-}
 
-/* Back — centred watermark logo */
-.card-back-logo {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  opacity: .15;
-}
-.card-back-logo-img {
-  width: 80px;
-  height: 80px;
-  border-radius: 12px;
-  object-fit: cover;
-}
-
-/* Back — cardholder details */
-.card-back-details {
-  position: absolute;
-  bottom: 50px;
-  left: 80px;
-  display: flex;
-  gap: 24px;
-}
-.card-back-row {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.card-back-label {
-  font-size: 8px;
-  font-weight: 600;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  color: rgba(255,255,255,.4);
-}
-.card-back-value {
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  color: rgba(255,255,255,.85);
-}
-
-/* Back NFC symbol position */
-.card-nfc-back {
-  top: auto;
-  bottom: 28px;
-  right: 28px;
-}
-
-/* Card tagline on back */
-.card-tagline {
-  position: absolute;
-  bottom: 12px;
-  left: 28px;
-  right: 90px;
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: rgba(255,255,255,.35);
-}
 
 /* ── Hint ─────────────────────────────────────────────── */
 .nfc-hint {
